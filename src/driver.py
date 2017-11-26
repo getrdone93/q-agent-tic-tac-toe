@@ -67,7 +67,7 @@ def enumerateBoards(board, turn, allBoards):
         enumerateBoards(root, getTurn(turn), allBoards)
  
 def getNonTerminalBoards(allBoards):
-    return [board for board in allBoards if not isGameOver(board)] 
+    return tuple([board for board in allBoards if not isGameOver(board)]) 
         
 def getStateAction(nonTermBoards):
     result = {}
@@ -76,12 +76,27 @@ def getStateAction(nonTermBoards):
         for act in actions:
             result[tuple([board, act])] = 0
     return result
+
+
+def getAllPaths(board, turn, path, allPaths):
+    boardActions = getActions(board)
+    while boardActions != []:
+        root = invokeAction(boardActions.pop(), turn, board)
+        if isGameOver(root):
+            #board represents a finished game so other player can't go
+            #thus no recursive call needs to be made
+            pathCopy = path[:]
+            pathCopy.append(root)
+            allPaths.add(tuple(tuple(b) for b in pathCopy))
+            continue
+        getAllPaths(root, getTurn(turn), path + [list(root)], allPaths)
+
      
 emptyBoard = generateBoard()
-allBoards = set([])
-allBoards.add(emptyBoard)
-enumerateBoards(emptyBoard, X, allBoards)
-nonTerm = getNonTerminalBoards(allBoards)  
-stateActionPairs = getStateAction(nonTerm)
+allPaths = set([])
+getAllPaths(emptyBoard, X, [[]], allPaths)
 
+#print len(allPaths)
+for p in allPaths:
+    print p
         
