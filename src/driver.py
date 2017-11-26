@@ -3,6 +3,11 @@
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
+WIN_REWARD = 2
+CAT_REWARD = .9
+NON_TERM_REWARD = -.1
+LOSS_REWARD = -2
+EXPLORE_MAX = 5
 
 #None space is unoccupied
 #x means x is in space
@@ -41,9 +46,10 @@ def isGameOver(board):
 
 def getActions(board):
     result = []
-    for idx, ele in enumerate(board):
-        if ele == None:
-            result.append(idx)
+    if board != () and not isGameOver(board):
+        for idx, ele in enumerate(board):
+            if ele == None:
+                result.append(idx)
     return result
 
 def getAllBoardsAndPaths(board, turn, allBoards, path, allPaths):
@@ -64,12 +70,16 @@ def getAllBoardsAndPaths(board, turn, allBoards, path, allPaths):
 def getNonTerminalBoards(allBoards):
     return tuple([board for board in allBoards if not isGameOver(board)]) 
         
-def getStateAction(nonTermBoards):
+def getStateAction(allBoards):
     result = {}
-    for board in nonTermBoards:
-        actions = getActions(board)
-        for act in actions:
-            result[tuple([board, act])] = 0
+    for board in allBoards:
+        if isGameOver(board):
+            result[(board, None)] = 0
+        else:
+            actions = getActions(board)
+            for act in actions:
+                result[(board, act)] = 0
+    result[((), None)] = 0
     return result
 
 def stepSizeFunc(n):
@@ -77,44 +87,85 @@ def stepSizeFunc(n):
 
 def getMaxByBoard(board, dictionary):
     return max([dictionary[key] for key in dictionary if key[0] == board])         
- 
+
 def rewardFunction(board):
-    if isWin(board, X) or isWin(board, O):
-        return 2
+    if board == ():
+        return NON_TERM_REWARD
+    elif isWin(board, X) or isWin(board, O):
+        return WIN_REWARD
     elif isCat(board):
-        return 1
+        return CAT_REWARD
     else:
-        return -1
- 
-# def learn(allPaths, stateActValue, stateActFreq, discount):
-#     prevBoard = prevAction = prevReward = None
-#     for path in allPaths:
-#         #q learning agent
-#         pathList = list(path)
-#         termBoard = pathList.pop(len(pathList) - 1)
-#         while pathList != []:
-#             board = pathList.pop(0)
-#             if prevBoard != None:
-#                 stateActFreq[(prevBoard, prevAction)] += 1
-#                 stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
-#                                                           + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
-#                                                           * (prevReward + discount * getMaxByBoard(board, stateActValue) 
-#                                                               - stateActValue[(prevBoard, prevAction)]))
+        return NON_TERM_REWARD
+
+def getPreviousAction(prevBoard, currentBoard):
+    #the index that differs is the previous action
+    #that action was invoked on b1 which resulted in b2
+    if prevBoard == None:
+        return None
+    for index in enumerate(currentBoard):
+        if index[1] != prevBoard[index[0]]:
+            return index[0]
+
+def explorationFunc(u, n):
+    if n < EXPLORE_MAX:
+        return WIN_REWARD #return best possible reward obtainable in any state
+    return u    
+
+def getBestAction(board, stateActFreq, stateActValue):
+    actions = getActions(board)
+    maxVal = -float("inf")
+    result = None
+    for act in actions:
+        tempVal = explorationFunc(stateActValue[(board, act)], stateActFreq[(board, act)])
+        if maxVal < tempVal:
+            maxVal = tempVal
+            result = act
+    return result
+
+def learn(allPaths, stateActValue, stateActFreq, discount):
+    count = 0
+    for path in allPaths:
+        count += 1
+        if count % 50000 == 0:
+            print "On path: " + str(count)
+        pathList = list(path)
+        while pathList != []:
+            #q learning agent
+            prevBoard = prevAction = prevReward = None
+            board = pathList.pop(0)
+            if board != () and isGameOver(board):
+                stateActValue[(board, None)] = rewardFunction(board)
+            if prevBoard != None:
+                stateActFreq[(prevBoard, prevAction)] += 1
+                stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
+                                                          + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
+                                                          * (prevReward + discount * getMaxByBoard(board, stateActValue) 
+                                                              - stateActValue[(prevBoard, prevAction)]))
+            prevAction = getBestAction(board, stateActFreq, stateActValue)    
+            prevBoard = board
+            prevReward = rewardFunction(prevBoard)
             
-                
-                
 
 
-# emptyBoard = generateBoard()
-# allPaths = set([])
-# allBoards = set([])
-# getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
-# nonTermBoards = getNonTerminalBoards(allBoards)
-# dictionary = getStateAction(nonTermBoards)
-# 
-# valueNums = [dictionary[key] for key in dictionary if key[0] == list(allBoards)[50]]
-# 
-# print valueNums
+#print isGameOver(('x', 'o', 'x', 'o', None, 'x', 'o', None, 'x'))
+ 
 
-         
+emptyBoard = generateBoard()
+allPaths = set([])
+allBoards = set([])
+getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+    
+#print len(allBoards)
+#print len(allPaths)
+    
+print "got all boards and paths, attempting to learn"
+    
+stateActValue = getStateAction(allBoards)
+stateActFreq = getStateAction(allBoards)
+learn(allPaths, stateActValue, stateActFreq, 1)
+ 
+for val in stateActValue:
+    if stateActValue[val] < 0:
+        print "key: " + str(val) + "\tval: " + str(stateActValue[val])
         
