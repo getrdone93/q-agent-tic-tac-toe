@@ -75,7 +75,18 @@ def getStateAction(nonTermBoards):
 def stepSizeFunc(n):
     return 60 / float((59 + (1 if n == 0 else n)))
 
-# def learn(allPaths, stateActValue, stateActFreq, terminalBoards):
+def getMaxByBoard(board, dictionary):
+    return max([dictionary[key] for key in dictionary if key[0] == board])         
+ 
+def rewardFunction(board):
+    if isWin(board, X) or isWin(board, O):
+        return 2
+    elif isCat(board):
+        return 1
+    else:
+        return -1
+ 
+# def learn(allPaths, stateActValue, stateActFreq, discount):
 #     prevBoard = prevAction = prevReward = None
 #     for path in allPaths:
 #         #q learning agent
@@ -85,13 +96,25 @@ def stepSizeFunc(n):
 #             board = pathList.pop(0)
 #             if prevBoard != None:
 #                 stateActFreq[(prevBoard, prevAction)] += 1
-#  #               stateActValue[(prevBoard, prevAction)] += stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) * (prevReward + discount )
-             
-emptyBoard = generateBoard()
-allPaths = set([])
-allBoards = set([])
-getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
-print len(allPaths)
-print len(allBoards)
+#                 stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
+#                                                           + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
+#                                                           * (prevReward + discount * getMaxByBoard(board, stateActValue) 
+#                                                               - stateActValue[(prevBoard, prevAction)]))
+            
+                
+                
+
+
+# emptyBoard = generateBoard()
+# allPaths = set([])
+# allBoards = set([])
+# getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+# nonTermBoards = getNonTerminalBoards(allBoards)
+# dictionary = getStateAction(nonTermBoards)
+# 
+# valueNums = [dictionary[key] for key in dictionary if key[0] == list(allBoards)[50]]
+# 
+# print valueNums
+
          
         
