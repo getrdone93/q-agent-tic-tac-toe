@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import time
+import random 
 
 BOARD_LEN = 9
 X = 'x'
@@ -125,12 +127,27 @@ def getBestAction(board, stateActFreq, stateActValue):
             result = act
     return result
 
+def getPaths(allPaths, timeUb):
+    #can learn at about 6000 paths / minute or 2% of space
+    result = set([])
+    if (timeUb == -1):
+        return allPaths
+    else:
+        apList = list(allPaths)
+        numBlocks = timeUb * 6000 #block size is 6000
+        size = 0
+        while size < int(numBlocks):
+            result.add(apList[random.randint(0, len(apList) - 1)])
+            size += 1
+    return result    
+            
+
 def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
     count = 0
     for path in allPaths:
         count += 1
-        if count % 50000 == 0:
-            print "On path: " + str(count)
+        if count % 2000 == 0:
+            print "learning...on trial: " + str(count)
         pathList = list(path)
         prevBoard = prevAction = prevReward = None
         while pathList != []:
@@ -147,16 +164,16 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             prevAction = getBestAction(board, stateActFreq, stateActValue)    
             prevBoard = board
             prevReward = rewardFunction(prevBoard, agentPlayer)
-            
 
 
-#print isGameOver(('x', 'o', 'x', 'o', None, 'x', 'o', None, 'x'))
  
 
 emptyBoard = generateBoard()
 allPaths = set([])
 allBoards = set([])
 getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+
+print len (allPaths)
     
 #print len(allBoards)
 #print len(allPaths)
@@ -164,13 +181,17 @@ getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
 stateActValue = getStateAction(allBoards)
 stateActFreq = getStateAction(allBoards)
 
-print "got all boards, paths, maps, and hats attempting to learn dough bro"
+print "getting enough paths for 30 second learn time"
+paths = getPaths(allPaths, .5)
+print "num paths used in learning: " + str(len(paths))
 
-learn(allPaths, stateActValue, stateActFreq, 1, X)
+print "actually learning"
+learn(paths, stateActValue, stateActFreq, 1, X)
 
-for val in stateActValue:
-    if stateActValue[val] < 0 and not isGameOver(val[0]):
-        print "key: " + str(val) + "\tval: " + str(stateActValue[val])
-        
+# for val in stateActValue:
+#     if stateActValue[val] < 0 and not isGameOver(val[0]):
+#         print "key: " + str(val) + "\tval: " + str(stateActValue[val])
 # for val in stateActFreq:
-#     print "key: " + str(val) + "\tval: " + str(stateActFreq[val])        
+#     print "key: " + str(val) + "\tval: " + str(stateActFreq[val]) 
+
+#print isGameOver(('x', 'o', 'x', 'o', None, 'x', 'o', None, 'x'))      
