@@ -1,18 +1,9 @@
 #!/usr/bin/python
-#from __builtin__ import enumerate
 
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
 
-class State():
-    def __init__(self, board = None, value = None):
-        self.board = board
-        self.value = value
-#     def __str__(self):
-#         result = "board: " + ''.join(map(str, self.board)) + "\n" + "\tvalue: " + ValueError
-#         return result
-    
 #None space is unoccupied
 #x means x is in space
 #o means o is in space
@@ -55,7 +46,7 @@ def getActions(board):
             result.append(idx)
     return result
 
-def enumerateBoards(board, turn, allBoards):
+def getAllBoardsAndPaths(board, turn, allBoards, path, allPaths):
     boardActions = getActions(board)
     while boardActions != []:
         root = invokeAction(boardActions.pop(), turn, board)
@@ -63,8 +54,12 @@ def enumerateBoards(board, turn, allBoards):
         if isGameOver(root):
             #board represents a finished game so other player can't go
             #thus no recursive call needs to be made
+            #so copy path up to this point and append winning board
+            pathCopy = path[:]
+            pathCopy.append(root)
+            allPaths.add(tuple(tuple(b) for b in pathCopy))
             continue
-        enumerateBoards(root, getTurn(turn), allBoards)
+        getAllBoardsAndPaths(root, getTurn(turn), allBoards, path + [list(root)], allPaths)
  
 def getNonTerminalBoards(allBoards):
     return tuple([board for board in allBoards if not isGameOver(board)]) 
@@ -77,26 +72,26 @@ def getStateAction(nonTermBoards):
             result[tuple([board, act])] = 0
     return result
 
+def stepSizeFunc(n):
+    return 60 / float((59 + (1 if n == 0 else n)))
 
-def getAllPaths(board, turn, path, allPaths):
-    boardActions = getActions(board)
-    while boardActions != []:
-        root = invokeAction(boardActions.pop(), turn, board)
-        if isGameOver(root):
-            #board represents a finished game so other player can't go
-            #thus no recursive call needs to be made
-            pathCopy = path[:]
-            pathCopy.append(root)
-            allPaths.add(tuple(tuple(b) for b in pathCopy))
-            continue
-        getAllPaths(root, getTurn(turn), path + [list(root)], allPaths)
-
-     
+# def learn(allPaths, stateActValue, stateActFreq, terminalBoards):
+#     prevBoard = prevAction = prevReward = None
+#     for path in allPaths:
+#         #q learning agent
+#         pathList = list(path)
+#         termBoard = pathList.pop(len(pathList) - 1)
+#         while pathList != []:
+#             board = pathList.pop(0)
+#             if prevBoard != None:
+#                 stateActFreq[(prevBoard, prevAction)] += 1
+#  #               stateActValue[(prevBoard, prevAction)] += stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) * (prevReward + discount )
+             
 emptyBoard = generateBoard()
 allPaths = set([])
-getAllPaths(emptyBoard, X, [[]], allPaths)
-
-#print len(allPaths)
-for p in allPaths:
-    print p
+allBoards = set([])
+getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+print len(allPaths)
+print len(allBoards)
+         
         
