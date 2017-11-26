@@ -65,13 +65,23 @@ def enumerateBoards(board, turn, allBoards):
             #thus no recursive call needs to be made
             continue
         enumerateBoards(root, getTurn(turn), allBoards)
+ 
+def getNonTerminalBoards(allBoards):
+    return [board for board in allBoards if not isGameOver(board)] 
         
-        
+def getStateAction(nonTermBoards):
+    result = {}
+    for board in nonTermBoards:
+        actions = getActions(board)
+        for act in actions:
+            result[tuple([board, act])] = 0
+    return result
+     
 emptyBoard = generateBoard()
 allBoards = set([])
+allBoards.add(emptyBoard)
 enumerateBoards(emptyBoard, X, allBoards)
-print allBoards
-print len(allBoards)
-        
-        
+nonTerm = getNonTerminalBoards(allBoards)  
+stateActionPairs = getStateAction(nonTerm)
+
         
