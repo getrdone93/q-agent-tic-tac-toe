@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import random 
 from math import ceil
+from time import sleep
+
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
@@ -236,7 +238,7 @@ def main():
                 allPaths = set([])
                 allBoards = set([])
                 allBoards.add(emptyBoard)
-                getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+                getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
                 stateActValue = getStateAction(allBoards)
                 stateActFreq = getStateAction(allBoards)
 
@@ -259,5 +261,4 @@ def main():
             if playAgain:
                 sameSettingsInput = raw_input("Would you like to keep the same settings (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
-
-main()     
+main()
