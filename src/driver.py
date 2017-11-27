@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import random 
 from math import ceil
-from time import sleep
 
 BOARD_LEN = 9
 X = 'x'
