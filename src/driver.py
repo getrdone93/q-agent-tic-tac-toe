@@ -129,7 +129,7 @@ def getBestAction(board, stateActFreq, stateActValue):
 def getPaths(allPaths, timeUb):
     #can learn at about 6000 paths / minute or 2% of space
     result = set([])
-    if (timeUb == -1):
+    if timeUb < 0:
         return allPaths
     else:
         apList = list(allPaths)
@@ -245,8 +245,8 @@ def main():
                 timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
                    
                 print "generating paths for %s minute learn time" % (timeToLearn)
-                paths = getPaths(allPaths, timeToLearn)
-                print "Number of trails to be used in learning: " + str(len(paths))
+                paths = getPaths(allPaths, float(timeToLearn))
+                print "Number of trials to be used in learning: " + str(len(paths))
                     
                 print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
                 learn(paths, stateActValue, stateActFreq, 1, machine)
