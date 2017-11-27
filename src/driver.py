@@ -144,7 +144,6 @@ def getPaths(allPaths, timeUb):
 
 def updateRewards(observedRewards, cutoff, reward):
     for ind, entry in enumerate(observedRewards):
-        #print "ind: " + str(ind) + "\tentry: " + str(entry)
         if ind < cutoff:
             for key in entry:
                 entry[key] += reward
@@ -162,7 +161,7 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             #get observed rewards
             board = pathList.pop(0)
             observedRewards.append({(board) : 0})
-            #subtract reward from previous states
+            #add reward to previous states
             updateRewards(observedRewards, count, rewardFunction(board, agentPlayer))
             count += 1
         
@@ -219,7 +218,6 @@ def getBestMove(board, stateActValue):
     result = None
     for act in actions:
         tempVal = stateActValue[(board, act)]
-        print "((board, act), val) " + str(((board, act), tempVal))
         if maxVal < tempVal:
             maxVal = tempVal
             result = act
@@ -272,8 +270,8 @@ def main():
                 print "generating paths for %s minute learn time" % (timeToLearn)
                 paths = getPaths(allPaths, float(timeToLearn))
                 print "Number of trials to be used in learning: " + str(len(paths))
-                    
-                print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
+                
+                print "Agent will now learn from trials. This should take roughly %s minute(s)" % ("45" if timeToLearn == "-1" else timeToLearn)
                 learn(paths, stateActValue, stateActFreq, 1, machine)
              
             print "\nPlay!\n"
@@ -282,6 +280,6 @@ def main():
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
             if playAgain:
-                sameSettingsInput = raw_input("Would you like to keep the same settings (y, n)? ").lower()
+                sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
