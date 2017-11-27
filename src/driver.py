@@ -146,7 +146,7 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
     for path in allPaths:
         count += 1
         if count % 2000 == 0:
-            print "learning...on trial: " + str(count)
+            print "learning...completion percentage: {0:.0%}".format(count / float(len(allPaths)))
         pathList = list(path)
         prevBoard = prevAction = prevReward = None
         while pathList != []:
@@ -226,22 +226,36 @@ def playGame(stateActValue, human, machine):
             break
         turn = getTurn(turn)
     
-        
-        
+def main():
+        playAgain = True
+        while playAgain:
+            emptyBoard = generateBoard()
+            allPaths = set([])
+            allBoards = set([])
+            allBoards.add(emptyBoard)
+            getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+            stateActValue = getStateAction(allBoards)
+            stateActFreq = getStateAction(allBoards)
+            
+            human = raw_input("Do you want to be x or o? ").lower()
+            machine = X if human == 0 else O
+            timeToLearn = int(raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): "))
+             
+            print "generating paths for %s minute learn time" % (timeToLearn)
+            paths = getPaths(allPaths, timeToLearn)
+            print "Number of trails to be used in learning: " + str(len(paths))
+              
+            print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
+            learn(paths, stateActValue, stateActFreq, 1, machine)
+            
+            print "\nPlay!\n"
+            playGame(stateActValue, human, machine)
+            
+            playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
+            playAgain = True if playAgainInput == 'y' else False
 
-emptyBoard = generateBoard()
-allPaths = set([])
-allBoards = set([])
-getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
-stateActValue = getStateAction(allBoards)
-stateActFreq = getStateAction(allBoards)
+main()
 
-print "generating paths for 30 second learn time"
-paths = getPaths(allPaths, .1)
-print "num paths used in learning: " + str(len(paths))
- 
-print "actually learning"
-learn(paths, stateActValue, stateActFreq, 1, O)
 
-print "ready to play"
-playGame(stateActValue, X, O)     
+
+     
