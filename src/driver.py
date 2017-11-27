@@ -254,13 +254,4 @@ def main():
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
 
-#main()
-
-#  x | o | o 
-# -----------
-#  3 | o | 5 
-# -----------
-#  x | x | x 
- 
-tempBoard = ('x', 'o', 'o', None, 'o', None, 'x', 'x', 'x')
-print isWin(tempBoard, X)      
+#main()     
