@@ -175,7 +175,6 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
                 currentBoard = key
                 currentReward = entry[key]
              
-            #print "cb: " + str(currentBoard) + "cv: " + str(currentReward)    
             if currentBoard != () and isGameOver(currentBoard):
                 stateActValue[(currentBoard, None)] = currentReward
             if prevBoard != None:
@@ -184,7 +183,6 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
                                                           + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
                                                           * (prevReward + discount * getMaxByBoard(board, stateActValue) 
                                                               - stateActValue[(prevBoard, prevAction)]))
-                #print "new val: " + str(stateActValue[(prevBoard, prevAction)])
             prevAction = getBestAction(currentBoard, stateActFreq, stateActValue)    
             prevBoard = currentBoard
             prevReward = currentReward 
@@ -287,14 +285,3 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
-
-# emptyBoard = generateBoard()
-# allPaths = set([])
-# allBoards = set([])
-# allBoards.add(emptyBoard)
-# getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
-# stateActValue = getStateAction(allBoards)
-# stateActFreq = getStateAction(allBoards)
-#                 
-# learn(allPaths, stateActValue, stateActFreq, 1, X)
-             
