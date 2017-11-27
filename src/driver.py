@@ -255,6 +255,7 @@ def main():
         stateActValue = None
         while playAgain:
             if not sameSettings:
+                print "Generating startup data..."
                 emptyBoard = generateBoard()
                 allPaths = set([])
                 allBoards = set([])
