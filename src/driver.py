@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import time
 import random 
 
 BOARD_LEN = 9
@@ -254,8 +253,4 @@ def main():
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
 
-main()
-
-
-
-     
+main()     
