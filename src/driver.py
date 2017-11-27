@@ -141,7 +141,6 @@ def getPaths(allPaths, timeUb):
             size += 1
     return result    
             
-
 def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
     count = 0
     for path in allPaths:
@@ -165,33 +164,84 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             prevBoard = board
             prevReward = rewardFunction(prevBoard, agentPlayer)
 
+def output(ele, ind):
+    return ' ' + (str(ind) if ele == None else str(ele)) + ' '
 
- 
+def printBoard(board):
+    print '\n%s|%s|%s' % (output(board[0], 0), output(board[1], 1), output(board[2], 2))
+    print '-' * 11
+    print '%s|%s|%s' % (output(board[3], 3), output(board[4], 4), output(board[5], 5))
+    print '-' * 11
+    print '%s|%s|%s\n' % (output(board[6], 6), output(board[7], 7), output(board[8], 8))
+
+def getInput(actions):
+    inputValid = False
+    usrAct = None
+    while not inputValid:
+        usrAct = raw_input("Enter move: ")
+        usrAct = int(usrAct)
+        if usrAct in set(actions):
+            inputValid = True
+        else:
+            print "Invalid action. Valid actions are: " + str(actions)
+    return usrAct
+            
+def humanTurn(board, human):        
+    usrAct = getInput(getActions(board))
+    return invokeAction(usrAct, human, board)
+
+def getBestMove(board, stateActValue):
+    actions = getActions(board)
+    maxVal = -float("inf")
+    result = None
+    for act in actions:
+        tempVal = stateActValue[(board, act)]
+        if maxVal < tempVal:
+            maxVal = tempVal
+            result = act
+    return result
+
+def machineTurn(board, stateActValue, machine):
+    action = getBestMove(board, stateActValue)
+    print "Machine move: " + str(action)
+    return invokeAction(action, machine, board) 
+       
+def playGame(stateActValue, human, machine):
+    board = generateBoard()
+    turn = human if human == X else machine 
+    while True:
+        printBoard(board)
+        if turn == human:
+            board = humanTurn(board, human)
+        else:
+            board = machineTurn(board, stateActValue, machine)
+        if isGameOver(board):
+            if isWin(board, human):
+                print "Human wins!"
+            elif isWin(board, machine):
+                print "Machine wins!"
+            elif isCat(board):
+                print "Draw!"
+            printBoard(board)
+            break
+        turn = getTurn(turn)
+    
+        
+        
 
 emptyBoard = generateBoard()
 allPaths = set([])
 allBoards = set([])
 getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
-
-print len (allPaths)
-    
-#print len(allBoards)
-#print len(allPaths)
-    
 stateActValue = getStateAction(allBoards)
 stateActFreq = getStateAction(allBoards)
 
-print "getting enough paths for 30 second learn time"
-paths = getPaths(allPaths, .5)
+print "generating paths for 30 second learn time"
+paths = getPaths(allPaths, .1)
 print "num paths used in learning: " + str(len(paths))
-
+ 
 print "actually learning"
-learn(paths, stateActValue, stateActFreq, 1, X)
+learn(paths, stateActValue, stateActFreq, 1, O)
 
-# for val in stateActValue:
-#     if stateActValue[val] < 0 and not isGameOver(val[0]):
-#         print "key: " + str(val) + "\tval: " + str(stateActValue[val])
-# for val in stateActFreq:
-#     print "key: " + str(val) + "\tval: " + str(stateActFreq[val]) 
-
-#print isGameOver(('x', 'o', 'x', 'o', None, 'x', 'o', None, 'x'))      
+print "ready to play"
+playGame(stateActValue, X, O)     
