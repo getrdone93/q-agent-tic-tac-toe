@@ -6,10 +6,10 @@ from time import sleep
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
-WIN_REWARD = 2
+WIN_REWARD = 1
 CAT_REWARD = 0
 NON_TERM_REWARD = -.1
-LOSS_REWARD = -2
+LOSS_REWARD = -1
 EXPLORE_MAX = 5
 
 #None space is unoccupied
@@ -141,30 +141,54 @@ def getPaths(allPaths, timeUb):
             result.add(apList[random.randint(0, len(apList) - 1)])
             size += 1
     return result    
-            
+
+def updateRewards(observedRewards, cutoff, reward):
+    for ind, entry in enumerate(observedRewards):
+        #print "ind: " + str(ind) + "\tentry: " + str(entry)
+        if ind < cutoff:
+            for key in entry:
+                entry[key] += reward
+
 def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
-    count = 0
+    pathCount = 0
     for path in allPaths:
-        count += 1
-        if count % 2000 == 0:
-            print "learning...completion percentage: {0:.0%}".format(count / float(len(allPaths)))
+        pathCount += 1
+        if pathCount % 2000 == 0:
+            print "learning...completion percentage: {0:.0%}".format(pathCount / float(len(allPaths)))
         pathList = list(path)
-        prevBoard = prevAction = prevReward = None
+        observedRewards = []
+        count = 0
         while pathList != []:
-            #q learning agent
+            #get observed rewards
             board = pathList.pop(0)
-            if board != () and isGameOver(board):
-                stateActValue[(board, None)] = rewardFunction(board, agentPlayer)
+            observedRewards.append({(board) : 0})
+            #subtract reward from previous states
+            updateRewards(observedRewards, count, rewardFunction(board, agentPlayer))
+            count += 1
+        
+        prevBoard = prevAction = prevReward = None
+        #let agent learn from observed rewards
+        for entry in observedRewards:
+            currentBoard = None
+            currentReward = None
+            for key in entry:
+                currentBoard = key
+                currentReward = entry[key]
+             
+            #print "cb: " + str(currentBoard) + "cv: " + str(currentReward)    
+            if currentBoard != () and isGameOver(currentBoard):
+                stateActValue[(currentBoard, None)] = currentReward
             if prevBoard != None:
                 stateActFreq[(prevBoard, prevAction)] += 1
                 stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
                                                           + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
                                                           * (prevReward + discount * getMaxByBoard(board, stateActValue) 
                                                               - stateActValue[(prevBoard, prevAction)]))
-            prevAction = getBestAction(board, stateActFreq, stateActValue)    
-            prevBoard = board
-            prevReward = rewardFunction(prevBoard, agentPlayer)
-
+                #print "new val: " + str(stateActValue[(prevBoard, prevAction)])
+            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue)    
+            prevBoard = currentBoard
+            prevReward = currentReward 
+           
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
 
@@ -197,6 +221,7 @@ def getBestMove(board, stateActValue):
     result = None
     for act in actions:
         tempVal = stateActValue[(board, act)]
+        print "((board, act), val) " + str(((board, act), tempVal))
         if maxVal < tempVal:
             maxVal = tempVal
             result = act
@@ -262,3 +287,14 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
+
+# emptyBoard = generateBoard()
+# allPaths = set([])
+# allBoards = set([])
+# allBoards.add(emptyBoard)
+# getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
+# stateActValue = getStateAction(allBoards)
+# stateActFreq = getStateAction(allBoards)
+#                 
+# learn(allPaths, stateActValue, stateActFreq, 1, X)
+             
