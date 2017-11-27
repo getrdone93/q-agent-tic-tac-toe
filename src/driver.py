@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import random 
-
+from math import ceil
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
@@ -133,9 +133,9 @@ def getPaths(allPaths, timeUb):
         return allPaths
     else:
         apList = list(allPaths)
-        numBlocks = timeUb * 6000 #block size is 6000
+        numBlocks = ceil(float(timeUb) * 6000) #block size is 6000
         size = 0
-        while size < int(numBlocks):
+        while size < numBlocks:
             result.add(apList[random.randint(0, len(apList) - 1)])
             size += 1
     return result    
@@ -208,6 +208,7 @@ def machineTurn(board, stateActValue, machine):
 def playGame(stateActValue, human, machine):
     board = generateBoard()
     turn = human if human == X else machine 
+    print "Initial board: "
     while True:
         printBoard(board)
         if turn == human:
@@ -237,13 +238,13 @@ def main():
             stateActFreq = getStateAction(allBoards)
             
             human = raw_input("Do you want to be x or o? ").lower()
-            machine = X if human == 0 else O
-            timeToLearn = int(raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): "))
-             
+            machine = getTurn(human)
+            timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
+              
             print "generating paths for %s minute learn time" % (timeToLearn)
             paths = getPaths(allPaths, timeToLearn)
             print "Number of trails to be used in learning: " + str(len(paths))
-              
+               
             print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
             learn(paths, stateActValue, stateActFreq, 1, machine)
             
