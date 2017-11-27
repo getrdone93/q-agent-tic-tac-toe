@@ -228,30 +228,36 @@ def playGame(stateActValue, human, machine):
     
 def main():
         playAgain = True
+        sameSettings = False
+        stateActValue = None
         while playAgain:
-            emptyBoard = generateBoard()
-            allPaths = set([])
-            allBoards = set([])
-            allBoards.add(emptyBoard)
-            getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
-            stateActValue = getStateAction(allBoards)
-            stateActFreq = getStateAction(allBoards)
-            
-            human = raw_input("Do you want to be x or o? ").lower()
-            machine = getTurn(human)
-            timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
-               
-            print "generating paths for %s minute learn time" % (timeToLearn)
-            paths = getPaths(allPaths, timeToLearn)
-            print "Number of trails to be used in learning: " + str(len(paths))
-                
-            print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
-            learn(paths, stateActValue, stateActFreq, 1, machine)
+            if not sameSettings:
+                emptyBoard = generateBoard()
+                allPaths = set([])
+                allBoards = set([])
+                allBoards.add(emptyBoard)
+                getAllBoardsAndPaths(emptyBoard, X, allBoards, [[]], allPaths)
+                stateActValue = getStateAction(allBoards)
+                stateActFreq = getStateAction(allBoards)
+
+                human = raw_input("Do you want to be x or o? ").lower()
+                machine = getTurn(human)
+                timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
+                   
+                print "generating paths for %s minute learn time" % (timeToLearn)
+                paths = getPaths(allPaths, timeToLearn)
+                print "Number of trails to be used in learning: " + str(len(paths))
+                    
+                print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
+                learn(paths, stateActValue, stateActFreq, 1, machine)
              
             print "\nPlay!\n"
             playGame(stateActValue, human, machine)
              
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
+            if playAgain:
+                sameSettingsInput = raw_input("Would you like to keep the same settings (y, n)? ").lower()
+                sameSettings = True if sameSettingsInput == 'y' else False 
 
-#main()     
+main()     
