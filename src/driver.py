@@ -31,7 +31,7 @@ def isWin(board, char):
     #left to right wins
     if ((board[0] == char and board[1] == char and board[2] == char)
     or (board[3] == char and board[4] == char and board[5] == char)
-    or (board[6] == char and board[2] == char and board[8] == char)
+    or (board[6] == char and board[7] == char and board[8] == char)
     #top to bottom wins
     or  (board[0] == char and board[3] == char and board[6] == char)
     or  (board[1] == char and board[4] == char and board[7] == char)
@@ -240,18 +240,27 @@ def main():
             human = raw_input("Do you want to be x or o? ").lower()
             machine = getTurn(human)
             timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
-              
+               
             print "generating paths for %s minute learn time" % (timeToLearn)
             paths = getPaths(allPaths, timeToLearn)
             print "Number of trails to be used in learning: " + str(len(paths))
-               
+                
             print "Agent will now learn from trials. This should take roughly %s minute(s)" % (timeToLearn)
             learn(paths, stateActValue, stateActFreq, 1, machine)
-            
+             
             print "\nPlay!\n"
             playGame(stateActValue, human, machine)
-            
+             
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
 
-main()     
+#main()
+
+#  x | o | o 
+# -----------
+#  3 | o | 5 
+# -----------
+#  x | x | x 
+ 
+tempBoard = ('x', 'o', 'o', None, 'o', None, 'x', 'x', 'x')
+print isWin(tempBoard, X)      
