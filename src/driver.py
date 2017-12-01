@@ -29,8 +29,7 @@ def isCat(board):
     return len([ele for ele in board if ele != None]) == BOARD_LEN
 
 def isWin(board, char):
-    #left to right wins
-    if ((board[0] == char and board[1] == char and board[2] == char)
+    return ((board[0] == char and board[1] == char and board[2] == char)
     or (board[3] == char and board[4] == char and board[5] == char)
     or (board[6] == char and board[7] == char and board[8] == char)
     #top to bottom wins
@@ -39,9 +38,7 @@ def isWin(board, char):
     or  (board[2] == char and board[5] == char and board[8] == char)
     #diagonal wins
     or  (board[0] == char and board[4] == char and board[8] == char)
-    or  (board[2] == char and board[4] == char and board[6] == char)):
-        return True
-    return False
+    or  (board[2] == char and board[4] == char and board[6] == char))
         
 def isGameOver(board):
     return isCat(board) or isWin(board, X) or isWin(board, O)
@@ -167,13 +164,14 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
         
         prevBoard = prevAction = prevReward = None
         #let agent learn from observed rewards
+        turn = X;
         for entry in observedRewards:
             currentBoard = None
             currentReward = None
             for key in entry:
                 currentBoard = key
                 currentReward = entry[key]
-             
+            
             if currentBoard != () and isGameOver(currentBoard):
                 stateActValue[(currentBoard, None, agentPlayer)] = currentReward
             if prevBoard != None:
@@ -185,6 +183,7 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, agentPlayer)    
             prevBoard = currentBoard
             prevReward = currentReward 
+#             turn = getTurn(turn)
            
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
