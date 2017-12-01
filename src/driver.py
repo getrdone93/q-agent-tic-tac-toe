@@ -76,12 +76,13 @@ def getStateAction(allBoards):
     result = {}
     for board in allBoards:
         if isGameOver(board):
-            result[(board, None)] = 0
+            result[(board, None, X)] = 0
+            result[(board, None, O)] = 0
         else:
             actions = getActions(board)
             for act in actions:
-                result[(board, act)] = 0
-    result[((), None)] = 0
+                result[(board, act, X)] = 0
+                result[(board, act, O)] = 0
     return result
 
 def stepSizeFunc(n):
@@ -116,12 +117,12 @@ def explorationFunc(u, n):
         return WIN_REWARD #return best possible reward obtainable in any state
     return u    
 
-def getBestAction(board, stateActFreq, stateActValue):
+def getBestAction(board, stateActFreq, stateActValue, player):
     actions = getActions(board)
     maxVal = -float("inf")
     result = None
     for act in actions:
-        tempVal = explorationFunc(stateActValue[(board, act)], stateActFreq[(board, act)])
+        tempVal = explorationFunc(stateActValue[(board, act, player)], stateActFreq[(board, act, player)])
         if maxVal < tempVal:
             maxVal = tempVal
             result = act
@@ -174,14 +175,14 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
                 currentReward = entry[key]
              
             if currentBoard != () and isGameOver(currentBoard):
-                stateActValue[(currentBoard, None)] = currentReward
+                stateActValue[(currentBoard, None, agentPlayer)] = currentReward
             if prevBoard != None:
-                stateActFreq[(prevBoard, prevAction)] += 1
-                stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
-                                                          + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
+                stateActFreq[(prevBoard, prevAction, agentPlayer)] += 1
+                stateActValue[(prevBoard, prevAction, agentPlayer)] = (stateActValue[(prevBoard, prevAction, agentPlayer)] 
+                                                          + stepSizeFunc(stateActFreq[(prevBoard, prevAction, agentPlayer)]) 
                                                           * (prevReward + discount * getMaxByBoard(board, stateActValue) 
-                                                              - stateActValue[(prevBoard, prevAction)]))
-            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue)    
+                                                              - stateActValue[(prevBoard, prevAction, agentPlayer)]))
+            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, agentPlayer)    
             prevBoard = currentBoard
             prevReward = currentReward 
            
@@ -211,19 +212,19 @@ def humanTurn(board, human):
     usrAct = getInput(getActions(board))
     return invokeAction(usrAct, human, board)
 
-def getBestMove(board, stateActValue):
+def getBestMove(board, stateActValue, machine):
     actions = getActions(board)
     maxVal = -float("inf")
     result = None
     for act in actions:
-        tempVal = stateActValue[(board, act)]
+        tempVal = stateActValue[(board, act, machine)]
         if maxVal < tempVal:
             maxVal = tempVal
             result = act
     return result
 
 def machineTurn(board, stateActValue, machine):
-    action = getBestMove(board, stateActValue)
+    action = getBestMove(board, stateActValue, machine)
     print "Machine move: " + str(action)
     return invokeAction(action, machine, board) 
        
