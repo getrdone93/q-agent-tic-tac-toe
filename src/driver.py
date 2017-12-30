@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import random 
 from math import ceil
 from random import randint
 
@@ -139,7 +138,7 @@ def getPaths(allPaths, timeUb):
         numBlocks = ceil(float(timeUb) * 6000) #block size is 6000
         size = 0
         while size < numBlocks:
-            result.add(apList[random.randint(0, len(apList) - 1)])
+            result.add(apList[randint(0, len(apList) - 1)])
             size += 1
     return result    
 
