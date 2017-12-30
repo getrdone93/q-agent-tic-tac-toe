@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import random 
 from math import ceil
+from random import randint
 
 BOARD_LEN = 9
 X = 'x'
@@ -88,6 +89,9 @@ def stepSizeFunc(n):
 def getMaxByBoard(board, dictionary):
     return max([dictionary[key] for key in dictionary if key[0] == board])         
 
+def getMinByBoard(board, dictionary):
+    return min([dictionary[key] for key in dictionary if key[0] == board])
+
 def rewardFunction(board, player):
     if board == ():
         return NON_TERM_REWARD
@@ -173,17 +177,23 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
                 currentReward = entry[key]
             
             if currentBoard != () and isGameOver(currentBoard):
-                stateActValue[(currentBoard, None, agentPlayer)] = currentReward
+                stateActValue[(currentBoard, None, turn)] = currentReward
             if prevBoard != None:
-                stateActFreq[(prevBoard, prevAction, agentPlayer)] += 1
-                stateActValue[(prevBoard, prevAction, agentPlayer)] = (stateActValue[(prevBoard, prevAction, agentPlayer)] 
-                                                          + stepSizeFunc(stateActFreq[(prevBoard, prevAction, agentPlayer)]) 
-                                                          * (prevReward + discount * getMaxByBoard(board, stateActValue) 
-                                                              - stateActValue[(prevBoard, prevAction, agentPlayer)]))
-            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, agentPlayer)    
+                stateActFreq[(prevBoard, prevAction, turn)] += 1
+                if turn == agentPlayer:
+                    stateActValue[(prevBoard, prevAction, turn)] = (stateActValue[(prevBoard, prevAction, turn)] 
+                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction, turn)]) 
+                                                              * (prevReward + discount * getMaxByBoard(board, stateActValue) 
+                                                                  - stateActValue[(prevBoard, prevAction, turn)]))
+                else:
+                    stateActValue[(prevBoard, prevAction, turn)] = (stateActValue[(prevBoard, prevAction, turn)] 
+                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction, turn)]) 
+                                                              * (prevReward + discount * getMinByBoard(board, stateActValue) 
+                                                                  - stateActValue[(prevBoard, prevAction, turn)]))
+            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, turn)    
             prevBoard = currentBoard
             prevReward = currentReward 
-#             turn = getTurn(turn)
+            turn = getTurn(turn)
            
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
@@ -213,13 +223,18 @@ def humanTurn(board, human):
 
 def getBestMove(board, stateActValue, machine):
     actions = getActions(board)
-    maxVal = -float("inf")
+    actionVals = {}
     result = None
     for act in actions:
-        tempVal = stateActValue[(board, act, machine)]
-        if maxVal < tempVal:
-            maxVal = tempVal
-            result = act
+        actionVals[stateActValue[(board, act, machine)]] = act
+
+    if len(actionVals) == 1:
+        #all of the actions are equal so choose at random
+        result = actions[randint(0, len(actions) - 1)] 
+    else:
+        #hashed by value of action so return max key
+        result = max(actionVals.keys())
+               
     return result
 
 def machineTurn(board, stateActValue, machine):
@@ -283,3 +298,15 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
+
+
+
+
+
+#           next_Qs = self.Q[next_state_key]             # The Q values represent the expected future reward for player X for each available move in the next state (after the move has been made)
+#             if self.current_player.mark == "X":
+#                 expected = reward + (self.gamma * min(next_Qs.values()))        # If the current player is X, the next player is O, and the move with the minimum Q value should be chosen according to our "sign convention"
+#             elif self.current_player.mark == "O":
+#                 expected = reward + (self.gamma * max(next_Qs.values()))        # If the current player is O, the next player is X, and the move with the maximum Q vlue should be chosen
+#         change = self.alpha * (expected - self.Q[state_key][move])
+#         self.Q[state_key][move] += change
