@@ -73,13 +73,19 @@ def getStateAction(allBoards):
     result = {}
     for board in allBoards:
         if isGameOver(board):
-            result[(board, None, X)] = 0
-            result[(board, None, O)] = 0
+#             result[(board, None, X)] = 0
+#             result[(board, None, O)] = 0
+            
+            result[(board, None)] = 0
+            result[(board, None)] = 0
         else:
             actions = getActions(board)
             for act in actions:
-                result[(board, act, X)] = 0
-                result[(board, act, O)] = 0
+#                 result[(board, act, X)] = 0
+#                 result[(board, act, O)] = 0
+                
+                result[(board, act)] = 0
+                result[(board, act)] = 0
     return result
 
 def stepSizeFunc(n):
@@ -148,6 +154,15 @@ def updateRewards(observedRewards, cutoff, reward):
             for key in entry:
                 entry[key] += reward
 
+def getAction(prevBoard, currentBoard):
+    result = None
+    if prevBoard != None:
+        for idx, ele in enumerate(prevBoard):
+            if ele != currentBoard[idx]:
+                result = idx
+                break
+    return result
+
 def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
     pathCount = 0
     for path in allPaths:
@@ -175,21 +190,26 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
                 currentBoard = key
                 currentReward = entry[key]
             
+            prevAction = getAction(prevBoard, currentBoard)
             if currentBoard != () and isGameOver(currentBoard):
-                stateActValue[(currentBoard, None, turn)] = currentReward
-            if prevBoard != None:
-                stateActFreq[(prevBoard, prevAction, turn)] += 1
+                stateActValue[(currentBoard, None)] = currentReward
+            if prevBoard != None and prevAction != None:
+                stateActFreq[(prevBoard, prevAction)] += 1
                 if turn == agentPlayer:
-                    stateActValue[(prevBoard, prevAction, turn)] = (stateActValue[(prevBoard, prevAction, turn)] 
-                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction, turn)]) 
+                    stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
+                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
                                                               * (prevReward + discount * getMaxByBoard(board, stateActValue) 
-                                                                  - stateActValue[(prevBoard, prevAction, turn)]))
+                                                                  - stateActValue[(prevBoard, prevAction)]))
                 else:
-                    stateActValue[(prevBoard, prevAction, turn)] = (stateActValue[(prevBoard, prevAction, turn)] 
-                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction, turn)]) 
+                    stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
+                                                              + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
                                                               * (prevReward + discount * getMinByBoard(board, stateActValue) 
-                                                                  - stateActValue[(prevBoard, prevAction, turn)]))
-            prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, turn)    
+                                                                  - stateActValue[(prevBoard, prevAction)]))
+            
+            #prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, turn)
+            #perhaps prevAction should be the actual action that took place between the last board and the current board
+            
+                
             prevBoard = currentBoard
             prevReward = currentReward 
             turn = getTurn(turn)
@@ -220,24 +240,24 @@ def humanTurn(board, human):
     usrAct = getInput(getActions(board))
     return invokeAction(usrAct, human, board)
 
-def getBestMove(board, stateActValue, machine):
+def getBestMove(board, stateActValue):
     actions = getActions(board)
     actionVals = {}
     result = None
     for act in actions:
-        actionVals[stateActValue[(board, act, machine)]] = act
+        actionVals[stateActValue[(board, act)]] = act
 
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
         result = actions[randint(0, len(actions) - 1)] 
     else:
         #hashed by value of action so return max key
-        result = max(actionVals.keys())
+        result = actionVals[max(actionVals.keys())]
                
     return result
 
 def machineTurn(board, stateActValue, machine):
-    action = getBestMove(board, stateActValue, machine)
+    action = getBestMove(board, stateActValue)
     print "Machine move: " + str(action)
     return invokeAction(action, machine, board) 
        
@@ -297,7 +317,6 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
-
 
 
 
