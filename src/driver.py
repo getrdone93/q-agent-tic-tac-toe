@@ -179,14 +179,18 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             print "learning...completion percentage: {0:.0%}".format(pathCount / float(len(allPaths)))
         pathList = list(path)
         observedRewards = []
-        count = 0
-        while pathList != []:
-            #get observed rewards
-            board = pathList.pop(0)
-            observedRewards.append({(board) : 0})
-            #add reward to previous states
-            updateRewards(observedRewards, count, rewardFunction(board, agentPlayer))
-            count += 1
+#         count = 0
+#         while pathList != []:
+#             #get observed rewards
+#             board = pathList.pop(0)
+#             observedRewards.append({(board) : 0})
+#             #add reward to previous states
+#             updateRewards(observedRewards, count, rewardFunction(board, agentPlayer))
+#             count += 1
+        
+#         for b in pathList:
+#             observedRewards.append({(b) : rewardFunction(b, agentPlayer)})
+#         print str(observedRewards)
         
         prevBoard = prevAction = prevReward = None
         #let agent learn from observed rewards
@@ -200,7 +204,10 @@ def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
             
             prevAction = getAction(prevBoard, currentBoard)
             if currentBoard != () and isGameOver(currentBoard):
-                stateActValue[(currentBoard, None)] = currentReward
+                #temp = stateActValue[(prevBoard, prevAction)]
+                stateActValue[(prevBoard, prevAction)] += prevReward
+                #print "Winning move " + str((prevBoard, prevAction)) + "\tdiff: " + str(temp - stateActValue[(prevBoard, prevAction)])
+                
             if prevBoard != None and prevAction != None:
                 stateActFreq[(prevBoard, prevAction)] += 1
                 
@@ -253,7 +260,8 @@ def getBestMove(board, stateActValue):
     for act in actions:
         actionVals[stateActValue[(board, act)]] = act
 
-    print str(actionVals)
+    for act in actions:
+        print ("%s, %s") % (act, stateActValue[(board, act)])
 
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
@@ -314,7 +322,30 @@ def main():
                 print "Number of trials to be used in learning: " + str(len(paths))
                 
                 print "Agent will now learn from trials. This should take roughly %s minute(s)" % ("45" if timeToLearn == "-1" else timeToLearn)
+                
+                print "learn once"
                 learn(paths, stateActValue, stateActFreq, 1, machine)
+#                 print "learn twice"
+#                 learn(paths, stateActValue, stateActFreq, 1, machine)
+                
+                firstActToTerminalCount = {}
+                for i in range(0, 9):
+                    tup = []
+                    for t in range(0, 9):
+                        tup.append(X if i == t else None)
+                    firstActToTerminalCount[tuple(tup)] = 0
+                    
+                for path in allPaths:
+                    pathList = list(path)
+                    pathList.pop(0) #get rid of all none board
+                    keyBoard = pathList.pop(0) #hehe, the board as a key, keyBoard
+                    while pathList != []:
+                        board = pathList.pop(0)
+                        if (isGameOver(board)):
+                            firstActToTerminalCount[keyBoard] += 1
+                            
+                for key in sorted(firstActToTerminalCount.keys()):
+                    print "(%s, %d)" % (key, firstActToTerminalCount[key])  
              
             print "\nPlay!\n"
             playGame(stateActValue, human, machine)
