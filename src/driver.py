@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from math import ceil
 from random import randint
+from distlib._backport.tarfile import TUREAD
 
 BOARD_LEN = 9
 X = 'x'
@@ -103,12 +104,12 @@ def getMinMaxByBoard(board, dictionary, minMax):
 def getMinByBoard(board, dictionary):
     return min([dictionary[key] for key in dictionary if key[0] == board])
 
-def rewardFunction(board, player):
+def rewardFunction(board):
     if board == ():
         return NON_TERM_REWARD
-    elif isWin(board, player):
+    elif isWin(board, X):
         return WIN_REWARD
-    elif isWin(board, X if player == O else O):
+    elif isWin(board, O):
         return LOSS_REWARD
     elif isCat(board):
         return CAT_REWARD
@@ -170,62 +171,24 @@ def getAction(prevBoard, currentBoard):
                 break
     return result
 
-def learn(allPaths, stateActValue, stateActFreq, discount, agentPlayer):
-    pathCount = 0
-    for path in allPaths:
-        #print str(path)
-        pathCount += 1
-        if pathCount % 2000 == 0:
-            print "learning...completion percentage: {0:.0%}".format(pathCount / float(len(allPaths)))
-        pathList = list(path)
-        observedRewards = []
-#         count = 0
-#         while pathList != []:
-#             #get observed rewards
-#             board = pathList.pop(0)
-#             observedRewards.append({(board) : 0})
-#             #add reward to previous states
-#             updateRewards(observedRewards, count, rewardFunction(board, agentPlayer))
-#             count += 1
+def learn(prevBoard, currentBoard, prevReward, stateActValue, stateActFreq, discount, turn):
+    prevAction = getAction(prevBoard, currentBoard)
+    if currentBoard != () and isGameOver(currentBoard):
+        #temp = stateActValue[(prevBoard, prevAction)]
+        #stateActValue[(prevBoard, prevAction)] += prevReward
+        stateActValue[(prevBoard, prevAction)] += 1000
+        #print "Winning move " + str((prevBoard, prevAction)) + "\tdiff: " + str(temp - stateActValue[(prevBoard, prevAction)])
         
-#         for b in pathList:
-#             observedRewards.append({(b) : rewardFunction(b, agentPlayer)})
-#         print str(observedRewards)
+    if prevBoard != None and prevAction != None:
+        stateActFreq[(prevBoard, prevAction)] += 1
         
-        prevBoard = prevAction = prevReward = None
-        #let agent learn from observed rewards
-        turn = X;
-        for entry in observedRewards:
-            currentBoard = None
-            currentReward = None
-            for key in entry:
-                currentBoard = key
-                currentReward = entry[key]
+        #if prevBoard == (None, None, None, None, None, None, None, None, None):
+        #    print str(prevBoard) + "\tprevAct: " + str(prevAction) + "\tFreq: " + str(stateActFreq[(prevBoard, prevAction)]) + "\t" + turn
             
-            prevAction = getAction(prevBoard, currentBoard)
-            if currentBoard != () and isGameOver(currentBoard):
-                #temp = stateActValue[(prevBoard, prevAction)]
-                stateActValue[(prevBoard, prevAction)] += prevReward
-                #print "Winning move " + str((prevBoard, prevAction)) + "\tdiff: " + str(temp - stateActValue[(prevBoard, prevAction)])
-                
-            if prevBoard != None and prevAction != None:
-                stateActFreq[(prevBoard, prevAction)] += 1
-                
-                #if prevBoard == (None, None, None, None, None, None, None, None, None):
-                #    print str(prevBoard) + "\tprevAct: " + str(prevAction) + "\tFreq: " + str(stateActFreq[(prevBoard, prevAction)]) + "\t" + turn
-                    
-                stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
-                                                    + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
-                                                    * (prevReward + discount * getMinMaxByBoard(prevBoard, stateActValue, max if getTurn(turn) == agentPlayer else min) 
-                                                       - stateActValue[(prevBoard, prevAction)]))
-            
-            #prevAction = getBestAction(currentBoard, stateActFreq, stateActValue, turn)
-            #perhaps prevAction should be the actual action that took place between the last board and the current board
-            
-                
-            prevBoard = currentBoard
-            prevReward = currentReward 
-            turn = getTurn(turn)
+        stateActValue[(prevBoard, prevAction)] = (stateActValue[(prevBoard, prevAction)] 
+                                            + stepSizeFunc(stateActFreq[(prevBoard, prevAction)]) 
+                                            * (prevReward + discount * getMinMaxByBoard(prevBoard, stateActValue, max if turn == X else min) 
+                                               - stateActValue[(prevBoard, prevAction)]))
            
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
@@ -253,51 +216,84 @@ def humanTurn(board, human):
     usrAct = getInput(getActions(board))
     return invokeAction(usrAct, human, board)
 
-def getBestMove(board, stateActValue):
+def getBestMove(board, stateActValue, minMax):
     actions = getActions(board)
     actionVals = {}
     result = None
     for act in actions:
         actionVals[stateActValue[(board, act)]] = act
 
-    for act in actions:
-        print ("%s, %s") % (act, stateActValue[(board, act)])
-
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
         result = actions[randint(0, len(actions) - 1)] 
     else:
-        #hashed by value of action so return max key
-        result = actionVals[max(actionVals.keys())]
+        #hashed by value of action so return min/max key
+        result = actionVals[minMax(actionVals.keys())]
                
     return result
 
-def machineTurn(board, stateActValue, machine):
-    action = getBestMove(board, stateActValue)
-    print "Machine move: " + str(action)
+def machineTurn(board, stateActValue, machine, learning):
+    action = None
+    
+    if learning:
+        if randint(0, 100) == 4:
+            possibles = getActions(board)
+            action = possibles[randint(0, len(possibles) - 1)]
+        else:
+            action = getBestMove(board, stateActValue, min if machine == O else max)
+    else:
+        action = getBestMove(board, stateActValue, min if machine == O else max)
     return invokeAction(action, machine, board) 
+
+def generateGames(stateActValue, stateActFreq, machine1, machine2, numTimes):
+    games = []
+    for i in range(0, numTimes):
+        if i % 2000 == 0:
+            print "Generating sample game: %d" % i
+        playGame(stateActValue, stateActFreq, machine1, machine2, True)
+    return games
+
+def play(stateActValue, human, machine):
+    return playGame(stateActValue, human, machine, False)  
        
-def playGame(stateActValue, human, machine):
+def playGame(stateActValue, stateActFreq, human, machine, learning):
     board = generateBoard()
     turn = human if human == X else machine 
-    print "Initial board: "
-    while True:
-        printBoard(board)
-        if turn == human:
-            board = humanTurn(board, human)
-        else:
-            board = machineTurn(board, stateActValue, machine)
-        if isGameOver(board):
-            if isWin(board, human):
-                print "Human wins!"
-            elif isWin(board, machine):
-                print "Machine wins!"
-            elif isCat(board):
-                print "Draw!"
+    if not learning:
+        print "Initial board: "
+    gameOver = False;
+    while not gameOver:
+        if not learning:
             printBoard(board)
-            break
+        if turn == human:
+            if learning:
+                newBoard = machineTurn(board, stateActValue, human, learning)
+            else:
+                newBoard = humanTurn(board, human)
+        else:
+            newBoard = machineTurn(board, stateActValue, machine, learning)
+            if not learning:
+                print "Machine move: " + str(getPreviousAction(board, newBoard))
+         
+        if learning:    
+            learn(board, newBoard, rewardFunction(board), stateActValue, stateActFreq, 1, turn)
+        board = newBoard
+        gameOver = isGameOver(board)
+        if gameOver:
+            if isWin(board, human):
+                if not learning:
+                    print "Human wins!"
+            elif isWin(board, machine):
+                if not learning:
+                    print "Machine wins!"
+            elif isCat(board):
+                if not learning:
+                    print "Draw!"
+            if not learning:
+                printBoard(board)
+        
         turn = getTurn(turn)
-    
+            
 def main():
         playAgain = True
         sameSettings = False
@@ -315,40 +311,17 @@ def main():
 
                 human = raw_input("Do you want to be x or o? ").lower()
                 machine = getTurn(human)
-                timeToLearn = raw_input("Enter how long you would like the agent to learn in minutes (-1 for smartest agent): ")
                    
-                print "generating paths for %s minute learn time" % (timeToLearn)
-                paths = getPaths(allPaths, float(timeToLearn))
-                print "Number of trials to be used in learning: " + str(len(paths))
+                #print "generating paths for %s minute learn time" % (timeToLearn)
+                print "I have to play with myself, hold on..."
+                generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 200000)
+                #paths = getPaths(allPaths, float(timeToLearn))
                 
-                print "Agent will now learn from trials. This should take roughly %s minute(s)" % ("45" if timeToLearn == "-1" else timeToLearn)
-                
-                print "learn once"
-                learn(paths, stateActValue, stateActFreq, 1, machine)
 #                 print "learn twice"
 #                 learn(paths, stateActValue, stateActFreq, 1, machine)
-                
-                firstActToTerminalCount = {}
-                for i in range(0, 9):
-                    tup = []
-                    for t in range(0, 9):
-                        tup.append(X if i == t else None)
-                    firstActToTerminalCount[tuple(tup)] = 0
-                    
-                for path in allPaths:
-                    pathList = list(path)
-                    pathList.pop(0) #get rid of all none board
-                    keyBoard = pathList.pop(0) #hehe, the board as a key, keyBoard
-                    while pathList != []:
-                        board = pathList.pop(0)
-                        if (isGameOver(board)):
-                            firstActToTerminalCount[keyBoard] += 1
-                            
-                for key in sorted(firstActToTerminalCount.keys()):
-                    print "(%s, %d)" % (key, firstActToTerminalCount[key])  
-             
+
             print "\nPlay!\n"
-            playGame(stateActValue, human, machine)
+            playGame(stateActValue, stateActFreq, human, machine, False)
              
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
@@ -356,6 +329,7 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
+
 
 
 
