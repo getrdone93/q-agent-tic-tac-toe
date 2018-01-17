@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from math import ceil
 from random import randint
-from distlib._backport.tarfile import TUREAD
 
 BOARD_LEN = 9
 X = 'x'
@@ -75,17 +74,11 @@ def getStateAction(allBoards):
     result = {}
     for board in allBoards:
         if isGameOver(board):
-#             result[(board, None, X)] = 0
-#             result[(board, None, O)] = 0
-            
             result[(board, None)] = 0
             result[(board, None)] = 0
         else:
             actions = getActions(board)
             for act in actions:
-#                 result[(board, act, X)] = 0
-#                 result[(board, act, O)] = 0
-                
                 result[(board, act)] = 0
                 result[(board, act)] = 0
     return result
@@ -174,30 +167,17 @@ def getAction(prevBoard, currentBoard):
 def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
     currentAction = getAction(currentBoard, nextBoard)
     if nextBoard != () and isGameOver(nextBoard):
-        #temp = stateActValue[(currentBoard, currentAction)]
-        temp = stateActValue[(currentBoard, currentAction)]
         stateActValue[(currentBoard, currentAction)] += nextReward
-        #print "diff on end state: " + str((currentBoard, currentAction)) + " ---> " + str((temp - stateActValue[(currentBoard, currentAction)]))
-#         stateActValue[(currentBoard, currentAction)] += 1000
-        #print "Winning move " + str((currentBoard, currentAction)) + "\tdiff: " + str(temp - stateActValue[(currentBoard, currentAction)])
         
     if currentBoard != None and currentAction != None:
         stateActFreq[(currentBoard, currentAction)] += 1
         
-        #if currentBoard == (None, None, None, None, None, None, None, None, None):
-        #    print str(currentBoard) + "\tprevAct: " + str(currentAction) + "\tFreq: " + str(stateActFreq[(currentBoard, currentAction)]) + "\t" + turn
         minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
         stateActValue[(currentBoard, currentAction)] = (stateActValue[(currentBoard, currentAction)] 
                                             + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
                                             * (nextReward + discount * minMax
                                                - stateActValue[(currentBoard, currentAction)]))
         
-        
-        #print "%s ---> %d" % (str((prevBoard, currentAction)), stateActValue[(prevBoard, currentAction)])
-        
-        #if stateActValue[(prevBoard, currentAction)] == 0
-            #print str((prevBoard, currentAction))
-           
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
 
@@ -263,7 +243,6 @@ def machineTurn(board, stateActValue, machine, learning):
     else:
         action = getBestMove(board, stateActValue, min if machine == O else max, learning)
         
-    #print "% of random actions: " + str((float(numRand) / numActions) * 100)
     return invokeAction(action, machine, board) 
 
 def generateGames(stateActValue, stateActFreq, machine1, machine2, numTimes):
@@ -297,8 +276,6 @@ def playGame(stateActValue, stateActFreq, human, machine, learning):
                 print "Machine move: " + str(getPreviousAction(board, newBoard))
          
         if learning:
-            #print "Board: " + str(board) + "\tnewBoard: " + str(newBoard)
-            #raw_input()
             learn(board, newBoard, rewardFunction(newBoard), stateActValue, stateActFreq, 1, turn)
         board = newBoard
         gameOver = isGameOver(board)
@@ -335,14 +312,9 @@ def main():
                 human = raw_input("Do you want to be x or o? ").lower()
                 machine = getTurn(human)
                    
-                #print "generating paths for %s minute learn time" % (timeToLearn)
                 print "I have to play with myself, hold on..."
                 generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 200000)
-                #paths = getPaths(allPaths, float(timeToLearn))
                 
-#                 print "learn twice"
-#                 learn(paths, stateActValue, stateActFreq, 1, machine)
-
             print "\nPlay!\n"
             playGame(stateActValue, stateActFreq, human, machine, False)
              
@@ -352,11 +324,3 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
-
-#           next_Qs = self.Q[next_state_key]             # The Q values represent the expected future reward for player X for each available move in the next state (after the move has been made)
-#             if self.current_player.mark == "X":
-#                 expected = reward + (self.gamma * min(next_Qs.values()))        # If the current player is X, the next player is O, and the move with the minimum Q value should be chosen according to our "sign convention"
-#             elif self.current_player.mark == "O":
-#                 expected = reward + (self.gamma * max(next_Qs.values()))        # If the current player is O, the next player is X, and the move with the maximum Q vlue should be chosen
-#         change = self.alpha * (expected - self.Q[state_key][move])
-#         self.Q[state_key][move] += change
