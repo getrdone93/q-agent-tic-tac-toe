@@ -248,8 +248,8 @@ def machineTurn(board, stateActValue, machine, learning):
 def generateGames(stateActValue, stateActFreq, machine1, machine2, numTimes):
     games = []
     for i in range(0, numTimes):
-        if i % 100000 == 0:
-            print "Generating sample game: %d" % i
+        if i % 10000 == 0:
+            print "I'm %f percent done playing with myself" % ((float(i) / numTimes) * 100)
         playGame(stateActValue, stateActFreq, machine1, machine2, True)
     return games
 
