@@ -233,7 +233,7 @@ def machineTurn(board, stateActValue, machine, learning):
     numActions += 1
     
     if learning:
-        if randint(0, 99) in range(0, 3): #3 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
+        if randint(0, 99) in range(0, 4): #4 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
             possibles = getActions(board)
             action = possibles[randint(0, len(possibles) - 1)]
             global numRand
@@ -312,7 +312,7 @@ def main():
                 stateActFreq = getStateAction(allBoards)
                    
                 print "I have to play with myself, hold on..."
-                generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 1000000)
+                generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 2000000)
                 
             print "\nPlay!\n"
             playGame(stateActValue, stateActFreq, human, machine, False)
