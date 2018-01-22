@@ -338,8 +338,6 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
 
         turn = getTurn(turn)
         
-    #if CAT_GAMES + PERM_AGENT_WINS + Q_AGENT_WINS == 10:
-        print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
     return -1
         
 def main():
@@ -364,13 +362,15 @@ def main():
                 
                 
         print "Testing the agent against the permutation agent..."
-        testAgent(stateActValue, generateBoard(), machine, getTurn(machine), X)
-#             print "\nPlay!\n"
-#             playGame(stateActValue, stateActFreq, human, machine, False)
-#              
-#             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
-#             playAgain = True if playAgainInput == 'y' else False
-#             if playAgain:
-#                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
-#                 sameSettings = True if sameSettingsInput == 'y' else False 
+        for i in range(0, 1000):
+            testAgent(stateActValue, generateBoard(), machine, getTurn(machine), X)
+            print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+#         print "\nPlay!\n"
+#         playGame(stateActValue, stateActFreq, human, machine, False)
+#            
+#         playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
+#         playAgain = True if playAgainInput == 'y' else False
+#         if playAgain:
+#             sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
+#             sameSettings = True if sameSettingsInput == 'y' else False 
 main()
