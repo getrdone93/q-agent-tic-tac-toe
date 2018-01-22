@@ -211,8 +211,8 @@ def getBestMove(board, stateActValue, minMax, learning):
     for act in actions:
         actionVals[stateActValue[(board, act)]] = act
     
-    if not learning:
-        print actionVals
+#     if not learning:
+#         print actionVals
 
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
@@ -293,33 +293,84 @@ def playGame(stateActValue, stateActFreq, human, machine, learning):
                 printBoard(board)
         
         turn = getTurn(turn)
+
+PERM_AGENT_WINS = 0
+Q_AGENT_WINS = 0
+CAT_GAMES = 0
+
+def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
+    newBoard = initialBoard
+    gameOver = False
+    while True:
+#         print "newBoard: " + str(newBoard)
+#         raw_input()
+        gameOver = isGameOver(newBoard)
+        if gameOver:
+            if isWin(newBoard, getTurn(machine)):
+                #print "perm agent wins"
+                global PERM_AGENT_WINS
+                PERM_AGENT_WINS += 1
+                return 1
+            elif isWin(newBoard, machine):
+                #print "q agent wins"
+                global Q_AGENT_WINS
+                Q_AGENT_WINS += 1
+                return 2
+            elif isCat(newBoard):
+                #print "cat"
+                global CAT_GAMES
+                CAT_GAMES += 1
+                return 0
             
+                
+        if turn == machine:
+            newBoard = machineTurn(newBoard, stateActValue, machine, False)
+        else:
+            actions = getActions(newBoard)
+            paTurn = getTurn(turn)
+            saveBoard = newBoard
+            for act in actions:
+                newBoard = invokeAction(act, permAgent, saveBoard)
+#                print "recursive call. newBoard: " + str(newBoard)
+                val = testAgent(stateActValue, newBoard, machine, permAgent, paTurn)
+#                 if (val == 2 or val == 1 or val == 0):
+#                     print "over. newBoard: " + str(newBoard) + "\ttemp: " + str(temp)
+
+        turn = getTurn(turn)
+        
+    #if CAT_GAMES + PERM_AGENT_WINS + Q_AGENT_WINS == 10:
+        print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+    return -1
+        
 def main():
         playAgain = True
         sameSettings = False
         stateActValue = None
-        while playAgain:
-            human = raw_input("Do you want to be x or o? ").lower()
-            machine = getTurn(human)
-            if not sameSettings:
-                print "Generating startup data..."
-                emptyBoard = generateBoard()
-                allPaths = set([])
-                allBoards = set([])
-                allBoards.add(emptyBoard)
-                getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
-                stateActValue = getStateAction(allBoards)
-                stateActFreq = getStateAction(allBoards)
-                   
-                print "I have to play with myself, hold on..."
-                generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 1000000)
+#         while playAgain:
+        human = raw_input("Do you want to be x or o? ").lower()
+        machine = getTurn(human)
+        if not sameSettings:
+            print "Generating startup data..."
+            emptyBoard = generateBoard()
+            allPaths = set([])
+            allBoards = set([])
+            allBoards.add(emptyBoard)
+            getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
+            stateActValue = getStateAction(allBoards)
+            stateActFreq = getStateAction(allBoards)
+               
+            print "I have to play with myself, hold on..."
+            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 10000)
                 
-            print "\nPlay!\n"
-            playGame(stateActValue, stateActFreq, human, machine, False)
-             
-            playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
-            playAgain = True if playAgainInput == 'y' else False
-            if playAgain:
-                sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
-                sameSettings = True if sameSettingsInput == 'y' else False 
+                
+        print "Testing the agent against the permutation agent..."
+        testAgent(stateActValue, generateBoard(), machine, getTurn(machine), X)
+#             print "\nPlay!\n"
+#             playGame(stateActValue, stateActFreq, human, machine, False)
+#              
+#             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
+#             playAgain = True if playAgainInput == 'y' else False
+#             if playAgain:
+#                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
+#                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
