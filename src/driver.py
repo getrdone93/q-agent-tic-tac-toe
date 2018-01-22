@@ -1,12 +1,11 @@
 #!/usr/bin/python
 from math import ceil
 from random import randint
-from time import sleep
 
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
-WIN_REWARD = 1
+WIN_REWARD = 99
 CAT_REWARD = .5
 NON_TERM_REWARD = 0
 LOSS_REWARD = -99
@@ -172,23 +171,12 @@ def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, disc
         
     if currentBoard != None and currentAction != None:
         stateActFreq[(currentBoard, currentAction)] += 1
-        #print stateActFreq[(currentBoard, currentAction)]
         
         minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
-        #minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max)
-        
-        #print minMax - stateActValue[(currentBoard, currentAction)]
-        temp = stateActValue[(currentBoard, currentAction)]
-        
         stateActValue[(currentBoard, currentAction)] = (stateActValue[(currentBoard, currentAction)] 
                                             + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
                                             * ((nextReward + discount * minMax)
                                                - stateActValue[(currentBoard, currentAction)]))
-        
-#         print temp - stateActValue[(currentBoard, currentAction)]
-        
-#         if stateActValue[(currentBoard, currentAction)] <= 0:
-#             print stateActValue[(currentBoard, currentAction)]
         
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
@@ -335,8 +323,3 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
-
-# for i in range(0, 100000):
-#     print ("n: %d\tssf: %f") % (i, stepSizeFunc(i))
-#     if (i % 1000 == 0):
-#         sleep(5)
