@@ -164,20 +164,6 @@ def getAction(prevBoard, currentBoard):
                 break
     return result
 
-def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
-    currentAction = getAction(currentBoard, nextBoard)
-    if nextBoard != () and isGameOver(nextBoard):
-        stateActValue[(currentBoard, currentAction)] += nextReward
-        
-    if currentBoard != None and currentAction != None:
-        stateActFreq[(currentBoard, currentAction)] += 1
-        
-        minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
-        stateActValue[(currentBoard, currentAction)] = (stateActValue[(currentBoard, currentAction)] 
-                                            + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
-                                            * ((nextReward + discount * minMax)
-                                               - stateActValue[(currentBoard, currentAction)]))
-        
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
 
@@ -233,7 +219,7 @@ def machineTurn(board, stateActValue, machine, learning):
     numActions += 1
     
     if learning:
-        if randint(0, 99) in range(0, 4): #4 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
+        if randint(0, 99) in range(0, 12): #12 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
             possibles = getActions(board)
             action = possibles[randint(0, len(possibles) - 1)]
             global numRand
@@ -255,6 +241,20 @@ def generateGames(stateActValue, stateActFreq, machine1, machine2, numTimes):
 
 def play(stateActValue, human, machine):
     return playGame(stateActValue, human, machine, False)  
+
+def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
+    currentAction = getAction(currentBoard, nextBoard)
+    if nextBoard != () and isGameOver(nextBoard):
+        stateActValue[(currentBoard, currentAction)] += nextReward
+        
+    if currentBoard != None and currentAction != None:
+        stateActFreq[(currentBoard, currentAction)] += 1
+        
+        minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
+        stateActValue[(currentBoard, currentAction)] = (stateActValue[(currentBoard, currentAction)] 
+                                            + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
+                                            * ((nextReward + discount * minMax)
+                                               - stateActValue[(currentBoard, currentAction)]))
        
 def playGame(stateActValue, stateActFreq, human, machine, learning):
     board = generateBoard()
@@ -294,10 +294,6 @@ def playGame(stateActValue, stateActFreq, human, machine, learning):
         
         turn = getTurn(turn)
 
-PERM_AGENT_WINS = 0
-Q_AGENT_WINS = 0
-CAT_GAMES = 0
-
 def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
     newBoard = initialBoard
     gameOver = False
@@ -306,10 +302,11 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
 #         raw_input()
         gameOver = isGameOver(newBoard)
         if gameOver:
-            if isWin(newBoard, getTurn(machine)):
+            if isWin(newBoard, permAgent):
                 #print "perm agent wins"
                 global PERM_AGENT_WINS
                 PERM_AGENT_WINS += 1
+#                 print newBoard
                 return 1
             elif isWin(newBoard, machine):
                 #print "q agent wins"
@@ -339,6 +336,10 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
         turn = getTurn(turn)
         
     return -1
+
+PERM_AGENT_WINS = 0
+Q_AGENT_WINS = 0
+CAT_GAMES = 0
         
 def main():
         playAgain = True
@@ -358,13 +359,29 @@ def main():
             stateActFreq = getStateAction(allBoards)
                
             print "I have to play with myself, hold on..."
-            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 10000)
+            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 3000000)
                 
                 
         print "Testing the agent against the permutation agent..."
-        for i in range(0, 1000):
-            testAgent(stateActValue, generateBoard(), machine, getTurn(machine), X)
+        permAgent = getTurn(machine)
+        for i in range(0, 10):
+            print "testing agent as %s" % (machine)
+            testAgent(stateActValue, generateBoard(), machine, permAgent, X)
             print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+            
+            global Q_AGENT_WINS
+            Q_AGENT_WINS = 0
+            
+            global PERM_AGENT_WINS
+            PERM_AGENT_WINS = 0
+            
+            global CAT_GAMES
+            CAT_GAMES = 0
+            
+            print "testing agent as %s" % (getTurn(machine))
+            testAgent(stateActValue, generateBoard(), permAgent, machine, X)
+            print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+            
 #         print "\nPlay!\n"
 #         playGame(stateActValue, stateActFreq, human, machine, False)
 #            
