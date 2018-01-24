@@ -306,7 +306,7 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
                 #print "perm agent wins"
                 global PERM_AGENT_WINS
                 PERM_AGENT_WINS += 1
-#                 print newBoard
+                print newBoard
                 return 1
             elif isWin(newBoard, machine):
                 #print "q agent wins"
@@ -359,7 +359,7 @@ def main():
             stateActFreq = getStateAction(allBoards)
                
             print "I have to play with myself, hold on..."
-            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 3000000)
+            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 2000000)
                 
                 
         print "Testing the agent against the permutation agent..."
