@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from math import ceil
 from random import randint
+import pickle
+from twisted.protocols.ftp import FileNotFoundError
 
 BOARD_LEN = 9
 X = 'x'
@@ -298,15 +300,12 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
     newBoard = initialBoard
     gameOver = False
     while True:
-#         print "newBoard: " + str(newBoard)
-#         raw_input()
         gameOver = isGameOver(newBoard)
         if gameOver:
             if isWin(newBoard, permAgent):
                 #print "perm agent wins"
                 global PERM_AGENT_WINS
                 PERM_AGENT_WINS += 1
-                print newBoard
                 return 1
             elif isWin(newBoard, machine):
                 #print "q agent wins"
@@ -319,7 +318,6 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
                 CAT_GAMES += 1
                 return 0
             
-                
         if turn == machine:
             newBoard = machineTurn(newBoard, stateActValue, machine, False)
         else:
@@ -340,54 +338,102 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
 PERM_AGENT_WINS = 0
 Q_AGENT_WINS = 0
 CAT_GAMES = 0
+
+def resetGlobals():
+    global Q_AGENT_WINS
+    Q_AGENT_WINS = 0
+    
+    global PERM_AGENT_WINS
+    PERM_AGENT_WINS = 0
+    
+    global CAT_GAMES
+    CAT_GAMES = 0
         
 def main():
         playAgain = True
         sameSettings = False
         stateActValue = None
-#         while playAgain:
-        human = raw_input("Do you want to be x or o? ").lower()
-        machine = getTurn(human)
-        if not sameSettings:
-            print "Generating startup data..."
-            emptyBoard = generateBoard()
-            allPaths = set([])
-            allBoards = set([])
-            allBoards.add(emptyBoard)
-            getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
-            stateActValue = getStateAction(allBoards)
-            stateActFreq = getStateAction(allBoards)
-               
-            print "I have to play with myself, hold on..."
-            generateGames(stateActValue, stateActFreq, getTurn(machine), machine, 2000000)
-                
-                
-        print "Testing the agent against the permutation agent..."
-        permAgent = getTurn(machine)
-        for i in range(0, 10):
-            print "testing agent as %s" % (machine)
-            testAgent(stateActValue, generateBoard(), machine, permAgent, X)
-            print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+        stateActFreq = None
+        fileName = "state.dat"
+        learnNewValues = False
+        try:
+            handle = open(fileName, "rb")
+        except IOError:
+            print "have to learn new values, file isnt there"
+            learnNewValues = True
+        else:
+            stateActValue = pickle.load(handle)
+        
+        while playAgain:
+            human = raw_input("Do you want to be x or o? ").lower()
+            machine = getTurn(human)
+            ready = 0
+            permAgent = human
+            if learnNewValues:
+                while ready != 2:
+                    ready = 0 
+                    resetGlobals()
+                    emptyBoard = generateBoard()
+                    allPaths = set([])
+                    allBoards = set([])
+                    allBoards.add(emptyBoard)
+                    getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
+                    stateActValue = getStateAction(allBoards)
+                    stateActFreq = getStateAction(allBoards)
+                    
+                    print "I have to play with myself, hold on..."
+                    generateGames(stateActValue, stateActFreq, human, machine, 2000000)
+                    
+                    print "Testing the agent against the permutation agent..."
+                    print "testing agent as %s" % (machine)
+                    testAgent(stateActValue, generateBoard(), machine, permAgent, X)
+                    print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+                    
+                    if PERM_AGENT_WINS == 0:
+                        ready += 1
+                    
+                    resetGlobals()
+                    
+                    print "testing agent as %s" % (permAgent)
+                    testAgent(stateActValue, generateBoard(), permAgent, machine, X)
+                    print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
+                    
+                    if PERM_AGENT_WINS == 0:
+                        ready += 1
             
-            global Q_AGENT_WINS
-            Q_AGENT_WINS = 0
+            if learnNewValues:
+                print "persisting my learned self to disk..."
+                fileHandle = open(fileName, "wb")
+                pickle.dump(stateActValue, fileHandle)
+                fileHandle.close()
+                learnNewValues = False
             
-            global PERM_AGENT_WINS
-            PERM_AGENT_WINS = 0
-            
-            global CAT_GAMES
-            CAT_GAMES = 0
-            
-            print "testing agent as %s" % (getTurn(machine))
-            testAgent(stateActValue, generateBoard(), permAgent, machine, X)
-            print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
-            
-#         print "\nPlay!\n"
-#         playGame(stateActValue, stateActFreq, human, machine, False)
-#            
-#         playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
-#         playAgain = True if playAgainInput == 'y' else False
-#         if playAgain:
-#             sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
-#             sameSettings = True if sameSettingsInput == 'y' else False 
+            print "\nPlay!\n"
+            playGame(stateActValue, stateActFreq, human, machine, False)
+            playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
+            playAgain = True if playAgainInput == 'y' else False
+            if playAgain:
+                sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
+                sameSettings = True if sameSettingsInput == 'y' else False 
 main()
+
+# m = {}
+# m['you'] = 5
+# l = []
+# 
+# # print m
+# fileName = "test.dat"
+# fileHandle = open(fileName, "wb")
+# pickle.dump(m, fileHandle)
+# pickle.dump([1, 2, 3], fileHandle)
+# fileHandle.close()
+# 
+# fileHandle = open(fileName, "rb")
+# l = pickle.load(fileHandle)
+# m = pickle.load(fileHandle)
+# print l
+# print m
+
+
+
+
