@@ -22,17 +22,14 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
         gameOver = isGameOver(newBoard)
         if gameOver:
             if isWin(newBoard, permAgent):
-                #print "perm agent wins"
                 global PERM_AGENT_WINS
                 PERM_AGENT_WINS += 1
                 return 1
             elif isWin(newBoard, machine):
-                #print "q agent wins"
                 global Q_AGENT_WINS
                 Q_AGENT_WINS += 1
                 return 2
             elif isCat(newBoard):
-                #print "cat"
                 global CAT_GAMES
                 CAT_GAMES += 1
                 return 0

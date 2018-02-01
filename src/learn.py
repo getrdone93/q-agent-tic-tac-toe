@@ -1,7 +1,11 @@
 #!/usr/bin/python
-from common import *
+from src.common import *
+from src.perm_tester import testAgent, PERM_AGENT_WINS
 
-def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
+NUM_GAMES = 2000000
+DISCOUNT = 1
+
+def updateStateActValue(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
     currentAction = getAction(currentBoard, nextBoard)
     if nextBoard != () and isGameOver(nextBoard):
         stateActValue[(currentBoard, currentAction)] += nextReward
@@ -14,14 +18,6 @@ def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, disc
                                             + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
                                             * ((nextReward + discount * minMax)
                                                - stateActValue[(currentBoard, currentAction)]))
-
-def generateGames(stateActValue, stateActFreq, machine1, machine2, numTimes):
-    games = []
-    for i in range(0, numTimes):
-        if i % 10000 == 0:
-            print "I'm %f percent done playing with myself" % ((float(i) / numTimes) * 100)
-        playGame(stateActValue, stateActFreq, machine1, machine2, True)
-    return games
 
 def stepSizeFunc(n):
     return 60 / float((59 + (1 if n == 0 else n)))
@@ -48,11 +44,54 @@ def getAllBoards(board, turn, allBoards):
             continue
         getAllBoards(root, getTurn(turn), allBoards)
 
+def playGame(stateActValue, machine1, machine2):
+    board = generateBoard()
+    turn = machine1 if machine1 == X else machine2 
+    gameOver = False;
+    while not gameOver:
+        if turn == machine1:
+            newBoard = machineTurn(board, machine1)
+        else:
+            newBoard = machineTurn(board, stateActValue, machine2, True)
+        
+        #learn from move  
+        updateStateActValue(board, newBoard, rewardFunction(newBoard), stateActValue, DISCOUNT, turn)
+        
+        board = newBoard
+        gameOver = isGameOver(board)
+        if not gameOver:
+            turn = getTurn(turn)
 
-emptyBoard = generateBoard()
-allBoards = set([])
-allBoards.add(emptyBoard)
-getAllBoards(emptyBoard, X, allBoards)
-stateActValue = getStateAction(allBoards)
-stateActFreq = getStateAction(allBoards)
-          
+
+def getStateActValue():
+    emptyBoard = generateBoard()
+    allBoards = set([])
+    allBoards.add(emptyBoard)
+    getAllBoards(emptyBoard, X, allBoards)
+    stateActValue = getStateAction(allBoards)
+    stateActFreq = getStateAction(allBoards)
+    machine1 = X
+    machine2 = O
+    
+    for i in range(0, NUM_GAMES):
+        if i % 10000 == 0:
+            print "I'm %f percent done playing with myself" % ((float(i) / NUM_GAMES) * 100)
+        playGame(stateActValue, stateActFreq, machine1, machine2, True) 
+        
+    return stateActValue
+
+def learn():
+    isBeatable = True
+    stateActValue = getStateActValue()
+    numTrials = 0
+    while isBeatable:
+        print "Testing agent...on trial %d" % (numTrials)
+        testAgent(stateActValue, generateBoard(), X, O, X)
+        isBeatable = PERM_AGENT_WINS > 0
+        if isBeatable:
+            #skip next test because agent lost as X
+            continue
+        
+        testAgent(stateActValue, generateBoard(), O, X, X)
+        isBeatable = PERM_AGENT_WINS > 0
+             
