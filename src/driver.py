@@ -2,7 +2,6 @@
 from math import ceil
 from random import randint
 import pickle
-from twisted.protocols.ftp import FileNotFoundError
 
 BOARD_LEN = 9
 X = 'x'
@@ -54,24 +53,15 @@ def getActions(board):
                 result.append(idx)
     return result
 
-def getAllBoardsAndPaths(board, turn, allBoards, path, allPaths):
+def getAllBoards(board, turn, allBoards):
     boardActions = getActions(board)
     while boardActions != []:
         root = invokeAction(boardActions.pop(), turn, board)
         allBoards.add(root)
         if isGameOver(root):
-            #board represents a finished game so other player can't go
-            #thus no recursive call needs to be made
-            #so copy path up to this point and append winning board
-            pathCopy = path[:]
-            pathCopy.append(root)
-            allPaths.add(tuple(tuple(b) for b in pathCopy))
             continue
-        getAllBoardsAndPaths(root, getTurn(turn), allBoards, path + [list(root)], allPaths)
+        getAllBoards(root, getTurn(turn), allBoards)
  
-def getNonTerminalBoards(allBoards):
-    return tuple([board for board in allBoards if not isGameOver(board)]) 
-        
 def getStateAction(allBoards):
     result = {}
     for board in allBoards:
@@ -96,9 +86,6 @@ def getMinMaxByBoard(board, dictionary, minMax):
     
     return minMax(values)         
 
-def getMinByBoard(board, dictionary):
-    return min([dictionary[key] for key in dictionary if key[0] == board])
-
 def rewardFunction(board):
     if board == ():
         return NON_TERM_REWARD
@@ -119,43 +106,6 @@ def getPreviousAction(prevBoard, currentBoard):
     for index in enumerate(currentBoard):
         if index[1] != prevBoard[index[0]]:
             return index[0]
-
-def explorationFunc(u, n):
-    if n < EXPLORE_MAX:
-        return WIN_REWARD #return best possible reward obtainable in any state
-    return u    
-
-#deprecated
-def getBestAction(board, stateActFreq, stateActValue, player):
-    actions = getActions(board)
-    maxVal = -float("inf")
-    result = None
-    for act in actions:
-        tempVal = explorationFunc(stateActValue[(board, act, player)], stateActFreq[(board, act, player)])
-        if maxVal < tempVal:
-            maxVal = tempVal
-            result = act
-    return result
-
-def getPaths(allPaths, timeUb):
-    #can learn at about 6000 paths / minute or 2% of space
-    result = set([])
-    if timeUb < 0:
-        return allPaths
-    else:
-        apList = list(allPaths)
-        numBlocks = ceil(float(timeUb) * 6000) #block size is 6000
-        size = 0
-        while size < numBlocks:
-            result.add(apList[randint(0, len(apList) - 1)])
-            size += 1
-    return result    
-
-def updateRewards(observedRewards, cutoff, reward):
-    for ind, entry in enumerate(observedRewards):
-        if ind < cutoff:
-            for key in entry:
-                entry[key] += reward
 
 def getAction(prevBoard, currentBoard):
     result = None
@@ -192,15 +142,12 @@ def humanTurn(board, human):
     usrAct = getInput(getActions(board))
     return invokeAction(usrAct, human, board)
 
-def getBestMove(board, stateActValue, minMax, learning):
+def getBestMove(board, stateActValue, minMax):
     actions = getActions(board)
     actionVals = {}
     result = None
     for act in actions:
         actionVals[stateActValue[(board, act)]] = act
-    
-#     if not learning:
-#         print actionVals
 
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
@@ -211,25 +158,16 @@ def getBestMove(board, stateActValue, minMax, learning):
                
     return result
 
-numActions = 0
-numRand = 0
-
 def machineTurn(board, stateActValue, machine, learning):
     action = None
-    
-    global numActions
-    numActions += 1
-    
     if learning:
         if randint(0, 99) in range(0, 12): #12 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
             possibles = getActions(board)
             action = possibles[randint(0, len(possibles) - 1)]
-            global numRand
-            numRand += 1
         else:
-            action = getBestMove(board, stateActValue, min if machine == O else max, learning)
+            action = getBestMove(board, stateActValue, min if machine == O else max)
     else:
-        action = getBestMove(board, stateActValue, min if machine == O else max, learning)
+        action = getBestMove(board, stateActValue, min if machine == O else max)
         
     return invokeAction(action, machine, board) 
 
@@ -322,15 +260,9 @@ def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
             newBoard = machineTurn(newBoard, stateActValue, machine, False)
         else:
             actions = getActions(newBoard)
-            paTurn = getTurn(turn)
             saveBoard = newBoard
             for act in actions:
                 newBoard = invokeAction(act, permAgent, saveBoard)
-#                print "recursive call. newBoard: " + str(newBoard)
-                val = testAgent(stateActValue, newBoard, machine, permAgent, paTurn)
-#                 if (val == 2 or val == 1 or val == 0):
-#                     print "over. newBoard: " + str(newBoard) + "\ttemp: " + str(temp)
-
         turn = getTurn(turn)
         
     return -1
@@ -351,7 +283,6 @@ def resetGlobals():
         
 def main():
         playAgain = True
-        sameSettings = False
         stateActValue = None
         stateActFreq = None
         fileName = "state.dat"
@@ -374,10 +305,9 @@ def main():
                     ready = 0 
                     resetGlobals()
                     emptyBoard = generateBoard()
-                    allPaths = set([])
                     allBoards = set([])
                     allBoards.add(emptyBoard)
-                    getAllBoardsAndPaths(emptyBoard, X, allBoards, [emptyBoard], allPaths)
+                    getAllBoards(emptyBoard, X, allBoards)
                     stateActValue = getStateAction(allBoards)
                     stateActFreq = getStateAction(allBoards)
                     
@@ -416,24 +346,3 @@ def main():
                 sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
                 sameSettings = True if sameSettingsInput == 'y' else False 
 main()
-
-# m = {}
-# m['you'] = 5
-# l = []
-# 
-# # print m
-# fileName = "test.dat"
-# fileHandle = open(fileName, "wb")
-# pickle.dump(m, fileHandle)
-# pickle.dump([1, 2, 3], fileHandle)
-# fileHandle.close()
-# 
-# fileHandle = open(fileName, "rb")
-# l = pickle.load(fileHandle)
-# m = pickle.load(fileHandle)
-# print l
-# print m
-
-
-
-
