@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from random import randint
 from common import *
 import pickle
 
@@ -29,100 +28,40 @@ def humanTurn(board, human):
     usrAct = getInput(getActions(board))
     return invokeAction(usrAct, human, board)
 
-def playGame(stateActValue, stateActFreq, human, machine, learning):
+def playGame(stateActValue, human, machine):
     board = generateBoard()
     turn = human if human == X else machine 
-    if not learning:
-        print "Initial board: "
+    print "Initial board: "
     gameOver = False;
     while not gameOver:
-        if not learning:
-            printBoard(board)
+        printBoard(board)
         if turn == human:
-            if learning:
-                newBoard = machineTurn(board, stateActValue, human, learning)
-            else:
-                newBoard = humanTurn(board, human)
+            newBoard = humanTurn(board, human)
         else:
-            newBoard = machineTurn(board, stateActValue, machine, learning)
-            if not learning:
-                print "Machine move: " + str(getPreviousAction(board, newBoard))
-         
-        if learning:
-            learn(board, newBoard, rewardFunction(newBoard), stateActValue, stateActFreq, 1, turn)
+            newBoard = machineTurn(board, stateActValue, machine, False)
+            print "Machine move: " + str(getPreviousAction(board, newBoard))
+                
         board = newBoard
         gameOver = isGameOver(board)
         if gameOver:
             if isWin(board, human):
-                if not learning:
-                    print "Human wins!"
+                print "Human wins!"
             elif isWin(board, machine):
-                if not learning:
-                    print "Machine wins!"
+                print "Machine wins!"
             elif isCat(board):
-                if not learning:
-                    print "Draw!"
-            if not learning:
-                printBoard(board)
-        
-        turn = getTurn(turn)
+                print "Draw!"
+            printBoard(board)
+        else:
+            turn = getTurn(turn)
 
 def main():
         playAgain = True
-        stateActValue = None
-        stateActFreq = None
-        fileName = "state.dat"
-        learnNewValues = False
-        try:
-            handle = open(fileName, "rb")
-        except IOError:
-            print "have to learn new values, file isnt there"
-            learnNewValues = True
-        else:
-            stateActValue = pickle.load(handle)
-        
+        stateActValue = loadStateActValueFile()
         while playAgain:
             human = raw_input("Do you want to be x or o? ").lower()
             machine = getTurn(human)
-            ready = 0
-            permAgent = human
-            if learnNewValues:
-                while ready != 2:
-                    ready = 0 
-                    resetGlobals()
-                        
-                    print "I have to play with myself, hold on..."
-                    generateGames(stateActValue, stateActFreq, human, machine, 2000000)
-                    
-                    print "Testing the agent against the permutation agent..."
-                    print "testing agent as %s" % (machine)
-                    testAgent(stateActValue, generateBoard(), machine, permAgent, X)
-                    print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
-                    
-                    if PERM_AGENT_WINS == 0:
-                        ready += 1
-                    
-                    resetGlobals()
-                    
-                    print "testing agent as %s" % (permAgent)
-                    testAgent(stateActValue, generateBoard(), permAgent, machine, X)
-                    print "Q-AGENT: %d\tPERM_AGENT: %d\tCAT: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
-                    
-                    if PERM_AGENT_WINS == 0:
-                        ready += 1
-            
-            if learnNewValues:
-                print "persisting my learned self to disk..."
-                fileHandle = open(fileName, "wb")
-                pickle.dump(stateActValue, fileHandle)
-                fileHandle.close()
-                learnNewValues = False
-            
             print "\nPlay!\n"
-            playGame(stateActValue, stateActFreq, human, machine, False)
+            playGame(stateActValue, human, machine)
             playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
             playAgain = True if playAgainInput == 'y' else False
-            if playAgain:
-                sameSettingsInput = raw_input("Would you like to keep the same settings(i.e. play the same agent again?) (y, n)? ").lower()
-                sameSettings = True if sameSettingsInput == 'y' else False 
 main()

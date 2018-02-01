@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from common import *
 
 def learn(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
@@ -46,6 +47,7 @@ def getAllBoards(board, turn, allBoards):
         if isGameOver(root):
             continue
         getAllBoards(root, getTurn(turn), allBoards)
+
 
 emptyBoard = generateBoard()
 allBoards = set([])

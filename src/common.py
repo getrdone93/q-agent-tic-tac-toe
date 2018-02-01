@@ -1,4 +1,6 @@
+#!/usr/bin/python
 from random import randint
+import pickle
 
 BOARD_LEN = 9
 X = 'x'
@@ -7,6 +9,18 @@ WIN_REWARD = 99
 CAT_REWARD = .5
 NON_TERM_REWARD = 0
 LOSS_REWARD = -99
+STATE_ACT_VALUE_FILE = "state.dat"
+
+def loadStateActValueFile():
+    stateActValue = None
+    try:
+        handle = open(STATE_ACT_VALUE_FILE, "rb")
+    except IOError:
+        print "ERROR: %s file does not exist." % (STATE_ACT_VALUE_FILE)
+    else:
+        stateActValue = pickle.load(handle)
+    
+    return stateActValue
 
 def getBestMove(board, stateActValue, minMax):
     actions = getActions(board)
