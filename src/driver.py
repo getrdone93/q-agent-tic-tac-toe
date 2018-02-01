@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from math import ceil
 from random import randint
 import pickle
 
