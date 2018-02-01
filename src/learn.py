@@ -84,6 +84,7 @@ def learn():
     isBeatable = True
     numTrials = 0
     while isBeatable:
+        numTrials += 1
         print "Testing agent...on trial %d" % (numTrials)
         stateActValue = getStateActValue()
         testAgent(stateActValue, generateBoard(), X, O, X)
@@ -91,7 +92,6 @@ def learn():
         if isBeatable:
             #skip next test because agent lost as X
             continue
-        
         testAgent(stateActValue, generateBoard(), O, X, X)
         isBeatable = PERM_AGENT_WINS > 0
              
