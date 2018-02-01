@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from src.common import *
-from src.perm_tester import testAgent, PERM_AGENT_WINS
+from src.perm_tester import testAgent, PERM_AGENT_WINS, resetGlobals
 
 NUM_GAMES = 2000000
 DISCOUNT = 1
@@ -83,15 +83,20 @@ def getStateActValue():
 def learn():
     isBeatable = True
     numTrials = 0
+    resetGlobals() #defensive to make sure we have a clean slate
     while isBeatable:
         numTrials += 1
         print "Testing agent...on trial %d" % (numTrials)
         stateActValue = getStateActValue()
         testAgent(stateActValue, generateBoard(), X, O, X)
         isBeatable = PERM_AGENT_WINS > 0
+        resetGlobals()
         if isBeatable:
             #skip next test because agent lost as X
             continue
         testAgent(stateActValue, generateBoard(), O, X, X)
         isBeatable = PERM_AGENT_WINS > 0
+        if isBeatable:
+            resetGlobals()
+
              
