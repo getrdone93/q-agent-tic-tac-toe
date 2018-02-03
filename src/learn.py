@@ -1,8 +1,7 @@
 #!/usr/bin/python
 from src.common import *
-from src.perm_tester import testAgent, PERM_AGENT_WINS, resetGlobals,\
-    Q_AGENT_WINS, CAT_GAMES
-
+from src.perm_tester import testQAgent, PERM_AGENT_WINS, resetGlobals
+    
 NUM_GAMES = 2000000
 DISCOUNT = 1
 
@@ -87,17 +86,16 @@ def learn():
         numTrials += 1
         print "Testing agent...on trial %d" % (numTrials)
         stateActValue = getStateActValue(allBoards)
-        testAgent(stateActValue, generateBoard(), X, O, X)
-        print "Machine: %d\tPermutation Agent: %d\tCat: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
-        isBeatable = PERM_AGENT_WINS > 0
+        isBeatable = testQAgent(stateActValue, X, O)
         resetGlobals()
         if isBeatable:
             #skip next test because agent lost as X
             continue
-        testAgent(stateActValue, generateBoard(), O, X, X)
-        print "Machine: %d\tPermutation Agent: %d\tCat: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
-        isBeatable = PERM_AGENT_WINS > 0
+        isBeatable = testQAgent(stateActValue, O, X)
         if isBeatable:
             resetGlobals()
+        print str(isBeatable)
+            
+    writeStateActValueFile(stateActValue)
 
 learn()

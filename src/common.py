@@ -32,6 +32,9 @@ def writeStateActValueFile(stateActValue):
     try:
         handle = open(STATE_ACT_VALUE_FILE, "wb")
     except IOError:
+        print "ERROR: when opening %s for write" % (STATE_ACT_VALUE_FILE)
+    else:
+        pickle.dump(stateActValue, handle)
         
 
 def getBestMove(board, stateActValue, minMax):
@@ -53,7 +56,7 @@ def getBestMove(board, stateActValue, minMax):
 def machineTurn(board, stateActValue, machine, learning):
     action = None
     if learning:
-        if randint(0, 99) in range(0, 12): #12 percent chance, good thing randint is inclusive and range is not (dat's sarcastic BWOH)
+        if randint(0, 99) in range(0, 12): #12 percent chance to move randomly
             possibles = getActions(board)
             action = possibles[randint(0, len(possibles) - 1)]
         else:
