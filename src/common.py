@@ -76,9 +76,7 @@ def getAction(prevBoard, currentBoard):
     return result
 
 def rewardFunction(board):
-    if board == ():
-        return NON_TERM_REWARD
-    elif isWin(board, X):
+    if isWin(board, X):
         return WIN_REWARD
     elif isWin(board, O):
         return LOSS_REWARD
@@ -104,21 +102,17 @@ def invokeAction(index, ele, board):
     return tuple(result)
 
 def getActions(board):
-    result = []
-    if board != () and not isGameOver(board):
-        for idx, ele in enumerate(board):
-            if ele == None:
-                result.append(idx)
-    return result
+    return [idx for idx, ele in enumerate(board) if ele == None] if board != () and not isGameOver(board) else []
 
 def isCat(board):
     return len([ele for ele in board if ele != None]) == BOARD_LEN
 
 def isWin(board, char):
+    #horizontal wins
     return ((board[0] == char and board[1] == char and board[2] == char)
     or (board[3] == char and board[4] == char and board[5] == char)
     or (board[6] == char and board[7] == char and board[8] == char)
-    #top to bottom wins
+    #vertical wins
     or  (board[0] == char and board[3] == char and board[6] == char)
     or  (board[1] == char and board[4] == char and board[7] == char)
     or  (board[2] == char and board[5] == char and board[8] == char)
@@ -133,4 +127,4 @@ def isGameOver(board):
 #x means x is in space
 #o means o is in space
 def generateBoard():
-    return tuple([None for n in range(BOARD_LEN)])
+    return tuple([None for _ in range(BOARD_LEN)])
