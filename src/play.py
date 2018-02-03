@@ -1,7 +1,6 @@
 #!/usr/bin/python
-from src.common import getActions, invokeAction, generateBoard, X, machineTurn, \
+from src.common import getActions, invokeAction, generateBoard, X, O, Y, N, machineTurn, \
     getAction, isGameOver, isWin, isCat, getTurn, loadStateActValueFile
-
 
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
@@ -55,14 +54,20 @@ def playGame(stateActValue, human, machine):
         else:
             turn = getTurn(turn)
 
+def getPlayerInput(valid, outMessage):
+    playerInput = None
+    while not playerInput in valid:
+        playerInput = raw_input(outMessage).lower()
+    return playerInput
+
 def main():
         playAgain = True
         stateActValue = loadStateActValueFile()
         while playAgain:
-            human = raw_input("Do you want to be x or o? ").lower()
+            human = getPlayerInput({X, O}, "Do you want to be x or o? ")
             machine = getTurn(human)
             print "\nPlay!\n"
             playGame(stateActValue, human, machine)
-            playAgainInput = raw_input("Do you want to play again (y, n)? ").lower()
+            playAgainInput = getPlayerInput({Y, N}, "Do you want to play again (y, n)? ")
             playAgain = True if playAgainInput == 'y' else False
 main()

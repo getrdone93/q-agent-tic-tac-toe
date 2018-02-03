@@ -5,6 +5,8 @@ import pickle
 BOARD_LEN = 9
 X = 'x'
 O = 'o'
+Y = 'y'
+N = 'n'
 WIN_REWARD = 99
 CAT_REWARD = .5
 NON_TERM_REWARD = 0
