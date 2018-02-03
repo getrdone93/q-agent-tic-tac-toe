@@ -1,38 +1,38 @@
 #!/usr/bin/python
 from src.common import *
-from src.perm_tester import testAgent, PERM_AGENT_WINS, resetGlobals
+from src.perm_tester import testAgent, PERM_AGENT_WINS, resetGlobals,\
+    Q_AGENT_WINS, CAT_GAMES
 
 NUM_GAMES = 2000000
 DISCOUNT = 1
 
-def updateStateActValue(currentBoard, nextBoard, nextReward, stateActValue, stateActFreq, discount, turn):
+def updateStateActValue(currentBoard, nextBoard, nextReward, stateActValue, discount, turn):
     currentAction = getAction(currentBoard, nextBoard)
     if nextBoard != () and isGameOver(nextBoard):
-        stateActValue[(currentBoard, currentAction)] += nextReward
+        stateActValue[(currentBoard, currentAction)] += addToValue(stateActValue[(currentBoard, currentAction)], nextReward);
         
     if currentBoard != None and currentAction != None:
-        stateActFreq[(currentBoard, currentAction)] += 1
+        stateActValue[(currentBoard, currentAction)] += addToFrequency(stateActValue[(currentBoard, currentAction)], 1)
+
         
         minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
-        stateActValue[(currentBoard, currentAction)] = (stateActValue[(currentBoard, currentAction)] 
-                                            + stepSizeFunc(stateActFreq[(currentBoard, currentAction)]) 
-                                            * ((nextReward + discount * minMax)
-                                               - stateActValue[(currentBoard, currentAction)]))
+        newValue = (stateActValue[(currentBoard, currentAction)][0] + stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
+                    * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
+        stateActValue[(currentBoard, currentAction)] = addToValue(stateActValue[(currentBoard, currentAction)], newValue)
 
 def stepSizeFunc(n):
     return 60 / float((59 + (1 if n == 0 else n)))
 
+#(value, frequency)
 def getStateAction(allBoards):
     result = {}
     for board in allBoards:
         if isGameOver(board):
-            result[(board, None)] = 0
-            result[(board, None)] = 0
+            result[(board, None)] = (0, 0)
         else:
             actions = getActions(board)
             for act in actions:
-                result[(board, act)] = 0
-                result[(board, act)] = 0
+                result[(board, act)] = (0, 0)
     return result
 
 def getAllBoards(board, turn, allBoards):
@@ -50,7 +50,7 @@ def playGame(stateActValue, machine1, machine2):
     gameOver = False;
     while not gameOver:
         if turn == machine1:
-            newBoard = machineTurn(board, machine1)
+            newBoard = machineTurn(board, stateActValue, machine1, True)
         else:
             newBoard = machineTurn(board, stateActValue, machine2, True)
         
@@ -63,40 +63,41 @@ def playGame(stateActValue, machine1, machine2):
             turn = getTurn(turn)
 
 
-def getStateActValue():
-    emptyBoard = generateBoard()
-    allBoards = set([])
-    allBoards.add(emptyBoard)
-    getAllBoards(emptyBoard, X, allBoards)
+def getStateActValue(allBoards):
     stateActValue = getStateAction(allBoards)
-    stateActFreq = getStateAction(allBoards)
     machine1 = X
     machine2 = O
     
     for i in range(0, NUM_GAMES):
         if i % 10000 == 0:
             print "I'm %f percent done playing with myself" % ((float(i) / NUM_GAMES) * 100)
-        playGame(stateActValue, stateActFreq, machine1, machine2, True) 
+        playGame(stateActValue, machine1, machine2) 
         
     return stateActValue
 
 def learn():
     isBeatable = True
     numTrials = 0
+    emptyBoard = generateBoard()
+    allBoards = set([])
+    allBoards.add(emptyBoard)
+    getAllBoards(emptyBoard, X, allBoards)
     resetGlobals() #defensive to make sure we have a clean slate
     while isBeatable:
         numTrials += 1
         print "Testing agent...on trial %d" % (numTrials)
-        stateActValue = getStateActValue()
+        stateActValue = getStateActValue(allBoards)
         testAgent(stateActValue, generateBoard(), X, O, X)
+        print "Machine: %d\tPermutation Agent: %d\tCat: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
         isBeatable = PERM_AGENT_WINS > 0
         resetGlobals()
         if isBeatable:
             #skip next test because agent lost as X
             continue
         testAgent(stateActValue, generateBoard(), O, X, X)
+        print "Machine: %d\tPermutation Agent: %d\tCat: %d" % (Q_AGENT_WINS, PERM_AGENT_WINS, CAT_GAMES)
         isBeatable = PERM_AGENT_WINS > 0
         if isBeatable:
             resetGlobals()
 
-             
+learn()

@@ -11,6 +11,12 @@ NON_TERM_REWARD = 0
 LOSS_REWARD = -99
 STATE_ACT_VALUE_FILE = "state.dat"
 
+def addToFrequency(tup, value):
+    return (tup[0], tup[1] + value)
+
+def addToValue(tup, value):
+    return (tup[0] + value, tup[1])
+
 def loadStateActValueFile():
     stateActValue = None
     try:
@@ -22,12 +28,18 @@ def loadStateActValueFile():
     
     return stateActValue
 
+def writeStateActValueFile(stateActValue):
+    try:
+        handle = open(STATE_ACT_VALUE_FILE, "wb")
+    except IOError:
+        
+
 def getBestMove(board, stateActValue, minMax):
     actions = getActions(board)
     actionVals = {}
     result = None
     for act in actions:
-        actionVals[stateActValue[(board, act)]] = act
+        actionVals[stateActValue[(board, act)][0]] = act
 
     if len(actionVals) == 1:
         #all of the actions are equal so choose at random
@@ -86,7 +98,7 @@ def getMinMaxByBoard(board, dictionary, minMax):
     actions = getActions(board);
     values = set()
     for action in actions:
-        values.add(dictionary[(board, action)])
+        values.add(dictionary[(board, action)][0])
     
     return minMax(values)  
 
