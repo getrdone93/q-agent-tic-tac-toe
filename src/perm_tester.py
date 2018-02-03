@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from common import *
+from src.common import generateBoard, X, isGameOver, isWin, isCat, machineTurn, \
+    getActions, getTurn, invokeAction
 
 def resetGlobals():
     global Q_AGENT_WINS
@@ -23,31 +24,26 @@ def testQAgent(stateActValue, machine, permAgent):
 def testAgent(stateActValue, initialBoard, machine, permAgent, turn):
     newBoard = initialBoard
     gameOver = False
-    while True:
+    while not gameOver:
         gameOver = isGameOver(newBoard)
         if gameOver:
             if isWin(newBoard, permAgent):
                 global PERM_AGENT_WINS
                 PERM_AGENT_WINS += 1
-                return 1
             elif isWin(newBoard, machine):
                 global Q_AGENT_WINS
                 Q_AGENT_WINS += 1
-                return 2
             elif isCat(newBoard):
                 global CAT_GAMES
                 CAT_GAMES += 1
-                return 0
-            
-        if turn == machine:
-            newBoard = machineTurn(newBoard, stateActValue, machine, False)
         else:
-            actions = getActions(newBoard)
-            saveBoard = newBoard
-            changeTurn = getTurn(turn)
-            for act in actions:
-                newBoard = invokeAction(act, permAgent, saveBoard)
-                testAgent(stateActValue, newBoard, machine, permAgent, changeTurn)
-        turn = getTurn(turn)
-        
-    return -1
+            if turn == machine:
+                newBoard = machineTurn(newBoard, stateActValue, machine, False)
+            else:
+                actions = getActions(newBoard)
+                saveBoard = newBoard
+                changeTurn = getTurn(turn)
+                for act in actions:
+                    newBoard = invokeAction(act, permAgent, saveBoard)
+                    testAgent(stateActValue, newBoard, machine, permAgent, changeTurn)
+            turn = getTurn(turn)

@@ -1,7 +1,10 @@
 #!/usr/bin/python
-from src.common import *
+from src.common import getAction, isGameOver, addToValue, addToFrequency, \
+    rewardFunction, getMinMaxByBoard, O, getActions, invokeAction, getTurn, \
+    generateBoard, X, machineTurn, writeStateActValueFile
 from src.perm_tester import testQAgent, resetGlobals
-    
+
+
 NUM_GAMES = 2000000
 DISCOUNT = 1
 
