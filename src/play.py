@@ -1,6 +1,7 @@
 #!/usr/bin/python
-from common import *
-import pickle
+from src.common import getActions, invokeAction, generateBoard, X, machineTurn, \
+    getAction, isGameOver, isWin, isCat, getTurn, loadStateActValueFile
+
 
 def output(ele, ind):
     return ' ' + (str(ind) if ele == None else str(ele)) + ' '
