@@ -14,8 +14,6 @@ def updateStateActValue(currentBoard, nextBoard, nextReward, stateActValue, disc
         stateActValue[(currentBoard, currentAction)] += addToFrequency(stateActValue[(currentBoard, currentAction)], 1)
 
         minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
-#         newValue = (stateActValue[(currentBoard, currentAction)][0] + stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
-#                     * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
         newValue = (stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
             * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
         
