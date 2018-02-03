@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from random import randint
 import pickle
+from os import getcwd
 
 BOARD_LEN = 9
 X = 'x'
@@ -11,7 +12,7 @@ WIN_REWARD = 99
 CAT_REWARD = .5
 NON_TERM_REWARD = 0
 LOSS_REWARD = -99
-STATE_ACT_VALUE_FILE = "state.dat"
+STATE_ACT_VALUE_FILE = getcwd() + "/../data/state.dat"
 
 def addToFrequency(tup, value):
     return (tup[0], tup[1] + value)
