@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from src.common import *
-from src.perm_tester import testQAgent, PERM_AGENT_WINS, resetGlobals
+from src.perm_tester import testQAgent, resetGlobals
     
 NUM_GAMES = 2000000
 DISCOUNT = 1
@@ -13,10 +13,12 @@ def updateStateActValue(currentBoard, nextBoard, nextReward, stateActValue, disc
     if currentBoard != None and currentAction != None:
         stateActValue[(currentBoard, currentAction)] += addToFrequency(stateActValue[(currentBoard, currentAction)], 1)
 
-        
         minMax = rewardFunction(nextBoard) if isGameOver(nextBoard) else getMinMaxByBoard(nextBoard, stateActValue, max if turn == O else min)
-        newValue = (stateActValue[(currentBoard, currentAction)][0] + stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
-                    * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
+#         newValue = (stateActValue[(currentBoard, currentAction)][0] + stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
+#                     * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
+        newValue = (stepSizeFunc(stateActValue[(currentBoard, currentAction)][1]) 
+            * ((nextReward + discount * minMax) - stateActValue[(currentBoard, currentAction)][0]))
+        
         stateActValue[(currentBoard, currentAction)] = addToValue(stateActValue[(currentBoard, currentAction)], newValue)
 
 def stepSizeFunc(n):
@@ -61,7 +63,6 @@ def playGame(stateActValue, machine1, machine2):
         if not gameOver:
             turn = getTurn(turn)
 
-
 def getStateActValue(allBoards):
     stateActValue = getStateAction(allBoards)
     machine1 = X
@@ -94,7 +95,6 @@ def learn():
         isBeatable = testQAgent(stateActValue, O, X)
         if isBeatable:
             resetGlobals()
-        print str(isBeatable)
             
     writeStateActValueFile(stateActValue)
 
