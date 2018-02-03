@@ -66,7 +66,6 @@ def machineTurn(board, stateActValue, machine, learning):
         
     return invokeAction(action, machine, board) 
 
-#TODO Looks like these functions do the same thing (getPreviousAction)
 def getAction(prevBoard, currentBoard):
     result = None
     if prevBoard != None:
@@ -75,15 +74,6 @@ def getAction(prevBoard, currentBoard):
                 result = idx
                 break
     return result
-
-def getPreviousAction(prevBoard, currentBoard):
-    #the index that differs is the previous action
-    #that action was invoked on b1 which resulted in b2
-    if prevBoard == None:
-        return None
-    for index in enumerate(currentBoard):
-        if index[1] != prevBoard[index[0]]:
-            return index[0]
 
 def rewardFunction(board):
     if board == ():

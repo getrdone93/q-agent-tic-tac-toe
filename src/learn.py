@@ -26,12 +26,12 @@ def stepSizeFunc(n):
 def getStateAction(allBoards):
     result = {}
     for board in allBoards:
-        if isGameOver(board):
-            result[(board, None)] = (0, 0)
-        else:
-            actions = getActions(board)
-            for act in actions:
-                result[(board, act)] = (0, 0)
+#         if isGameOver(board):
+#             result[(board, None)] = (0, 0)
+#         else:
+        actions = getActions(board)
+        for act in actions:
+            result[(board, act)] = (0, 0)
     return result
 
 def getAllBoards(board, turn, allBoards):

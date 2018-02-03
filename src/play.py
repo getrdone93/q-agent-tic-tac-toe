@@ -39,7 +39,7 @@ def playGame(stateActValue, human, machine):
             newBoard = humanTurn(board, human)
         else:
             newBoard = machineTurn(board, stateActValue, machine, False)
-            print "Machine move: " + str(getPreviousAction(board, newBoard))
+            print "Machine move: " + str(getAction(board, newBoard))
                 
         board = newBoard
         gameOver = isGameOver(board)
