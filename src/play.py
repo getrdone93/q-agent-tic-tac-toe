@@ -1,4 +1,7 @@
 #!/usr/bin/python
+import sys
+import os.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.common import getActions, invokeAction, generateBoard, X, O, Y, N, machineTurn, \
     getAction, isGameOver, isWin, isCat, getTurn, loadStateActValueFile
 
@@ -15,13 +18,18 @@ def printBoard(board):
 def getInput(actions):
     inputValid = False
     usrAct = None
+    invalidMessage = "Invalid action. Valid actions are: " + str(actions)
     while not inputValid:
         usrAct = raw_input("Enter move: ")
-        usrAct = int(usrAct)
-        if usrAct in set(actions):
-            inputValid = True
+        try:
+            usrAct = int(usrAct)
+        except ValueError:
+            print invalidMessage
         else:
-            print "Invalid action. Valid actions are: " + str(actions)
+            if usrAct in set(actions):
+                inputValid = True
+            else:
+                print invalidMessage
     return usrAct
             
 def humanTurn(board, human):        
