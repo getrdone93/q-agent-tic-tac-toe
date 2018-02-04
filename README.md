@@ -1,9 +1,9 @@
-I developed this project in eclipse with the pydev plugin. So it is easiest to play the q agent if you import this project into eclipse as a pydev project.
+Try to beat the q-agent!
 
 If you wish to play right away, then execute the play.py file.
 
 `python play.py`
 
-If you wish to see the learning process take place, then execute the learn.py file. This will result in a new state.dat file. The state.dat file is a dictionary that contains the state action value pairs and frequencies. This dictionary is the "brain" of the q agent.
+If you wish to see the learning process take place or if you are bored of playing the same q agent, then execute the learn.py file. This will result in a new state.dat file. The state.dat file is a dictionary that contains state action value pairs and frequencies. This dictionary is the "brain" of the q agent.
 
 `python learn.py`
